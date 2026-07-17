@@ -331,7 +331,7 @@ class MetricsProcessor(object):
         metric_map = {
             'Instance': {
                 'cpu': [('AWS/EC2', 'CPUUtilization',
-                         {'statistics': 'Average',
+                         {'statistics': 'Maximum',
                           'dimension': 'InstanceId'})],
                 'ram': [('CWAgent', 'mem_used_percent',
                          {'statistics': 'Average',
