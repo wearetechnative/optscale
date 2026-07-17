@@ -25,7 +25,7 @@ const cpuMetricChartProps = ({ metricType, metrics, colors, intl }) => {
       markerData: {
         name: "cpuAverage",
         value: getAverageLineValue(formattedData),
-        dataTestIdName: "cpu_average",
+        dataTestIdName: "cpuMaximum,",
       },
     };
   };
