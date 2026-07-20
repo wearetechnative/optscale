@@ -58,7 +58,7 @@ export const useOptscaleRecommendations = ({ withDeprecated = false }: { withDep
       InactiveConsoleUsers,
       IntelligentTiering,
       AbandonedS3Buckets,
-      AbandonedKinesisStreams,
+      // AbandonedKinesisStreams,
       AbandonedInstances,
       AbandonedLoadBalancers,
       PublicS3Buckets,
