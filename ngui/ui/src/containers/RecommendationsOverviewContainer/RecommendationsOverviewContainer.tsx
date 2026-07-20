@@ -134,7 +134,7 @@ const RecommendationsOverviewContainer = ({
 
       const save = hiddenRecommendationCardsOptionExists ? updateOption : createOption;
 
-      save(DASHBOARD_HIDDEN_RECOMMENDATION_CARDS_OPTION, nextHiddenRecommendationTypes);
+      save(DASHBOARD_HIDDEN_RECOMMENDATION_CARDS_OPTION, { hiddenRecommendationTypes: nextHiddenRecommendationTypes });
       setIsHiddenRecommendationCardsOptionCreated(true);
     },
     [createOption, hiddenRecommendationCardsOptionExists, updateOption]
