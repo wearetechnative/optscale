@@ -1,5 +1,6 @@
-import { useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { RecommendationModal } from "components/SideModalManager/SideModals";
+import { useIsAllowed } from "hooks/useAllowedActions";
 import { useGetIsRecommendationsDownloadAvailable } from "hooks/useGetIsRecommendationsDownloadAvailable";
 import { useOpenSideModal } from "hooks/useOpenSideModal";
 import { useOptscaleRecommendations } from "hooks/useOptscaleRecommendations";
@@ -15,6 +16,7 @@ import {
 } from "urls";
 import { DEFAULT_RECOMMENDATIONS_FILTER, DEFAULT_VIEW, POSSIBLE_RECOMMENDATIONS_FILTERS, POSSIBLE_VIEWS } from "./Filters";
 import RecommendationsOverview from "./RecommendationsOverview";
+import BaseRecommendation from "./recommendations/BaseRecommendation";
 import {
   setCategory as setCategoryActionCreator,
   setService as setServiceActionCreator,
@@ -24,6 +26,42 @@ import { useControlState } from "./redux/controlsState/hooks";
 import { VALUE_ACCESSORS } from "./redux/controlsState/reducer";
 
 const OPTION_PREFIX = "recommendation_";
+const DASHBOARD_HIDDEN_RECOMMENDATION_CARDS_OPTION = "dashboard_hidden_recommendation_cards";
+
+type OrganizationOption = {
+  name: string;
+  value?: unknown;
+};
+
+const getStringArray = (value: unknown) =>
+  Array.isArray(value) ? value.filter((item) => typeof item === "string") : [];
+
+const getHiddenRecommendationTypes = (options: OrganizationOption[]): string[] => {
+  const optionValue = options.find(({ name }) => name === DASHBOARD_HIDDEN_RECOMMENDATION_CARDS_OPTION)?.value;
+
+  if (Array.isArray(optionValue)) {
+    return getStringArray(optionValue);
+  }
+
+  if (typeof optionValue === "string") {
+    try {
+      return getStringArray(JSON.parse(optionValue));
+    } catch {
+      return [];
+    }
+  }
+
+  if (
+    typeof optionValue === "object" &&
+    optionValue !== null &&
+    "hiddenRecommendationTypes" in optionValue &&
+    Array.isArray(optionValue.hiddenRecommendationTypes)
+  ) {
+    return getStringArray(optionValue.hiddenRecommendationTypes);
+  }
+
+  return [];
+};
 
 type RecommendationsOverviewContainerProps = {
   selectedDataSourceIds: string[];
@@ -34,9 +72,13 @@ const RecommendationsOverviewContainer = ({
   selectedDataSourceIds,
   selectedDataSourceTypes,
 }: RecommendationsOverviewContainerProps) => {
-  const { useGet, useGetRecommendationsDownloadOptions } = OrganizationOptionsService();
+  const { useGet, useGetRecommendationsDownloadOptions, useUpdateOption, useCreateOption } =
+    OrganizationOptionsService();
   const { options: downloadOptions } = useGetRecommendationsDownloadOptions();
   const { options } = useGet(true);
+  const { updateOption, isUpdateOrganizationOptionLoading } = useUpdateOption();
+  const { createOption, isCreateOrganizationOptionLoading } = useCreateOption();
+  const isChangeRecommendationVisibilityAllowed = useIsAllowed({ requiredActions: ["EDIT_PARTNER"] });
 
   const downloadLimit = downloadOptions?.limit;
 
@@ -77,6 +119,26 @@ const RecommendationsOverviewContainer = ({
   const { data, isDataReady } = useGetOptimizationsOverview(selectedDataSourceIds);
 
   const optscaleRecommendations = useOptscaleRecommendations();
+  const storedHiddenRecommendationTypes = useMemo(() => getHiddenRecommendationTypes(options), [options]);
+  const [hiddenRecommendationTypesOverride, setHiddenRecommendationTypesOverride] = useState<string[] | null>(null);
+  const [isHiddenRecommendationCardsOptionCreated, setIsHiddenRecommendationCardsOptionCreated] = useState(false);
+  const hiddenRecommendationTypes = hiddenRecommendationTypesOverride ?? storedHiddenRecommendationTypes;
+  const isRecommendationVisibilityUpdateLoading = isUpdateOrganizationOptionLoading || isCreateOrganizationOptionLoading;
+  const hiddenRecommendationCardsOptionExists = options.some(
+    ({ name }: { name: string }) => name === DASHBOARD_HIDDEN_RECOMMENDATION_CARDS_OPTION
+  ) || isHiddenRecommendationCardsOptionCreated;
+
+  const updateHiddenRecommendationTypes = useCallback(
+    (nextHiddenRecommendationTypes: string[]) => {
+      setHiddenRecommendationTypesOverride(nextHiddenRecommendationTypes);
+
+      const save = hiddenRecommendationCardsOptionExists ? updateOption : createOption;
+
+      save(DASHBOARD_HIDDEN_RECOMMENDATION_CARDS_OPTION, nextHiddenRecommendationTypes);
+      setIsHiddenRecommendationCardsOptionCreated(true);
+    },
+    [createOption, hiddenRecommendationCardsOptionExists, updateOption]
+  );
 
   const organizationRecommendationOptions = options
     .filter(({ name }: { name: string }) =>
@@ -93,7 +155,7 @@ const RecommendationsOverviewContainer = ({
   const openSideModal = useOpenSideModal();
 
   const onRecommendationClick = useCallback(
-    (recommendation) => {
+    (recommendation: BaseRecommendation) => {
       openSideModal(RecommendationModal, {
         type: recommendation.type,
         titleMessageId: recommendation.title,
@@ -129,6 +191,10 @@ const RecommendationsOverviewContainer = ({
       service={service}
       recommendationsData={{ ...data, organizationOptions: organizationRecommendationOptions }}
       recommendationClasses={optscaleRecommendations}
+      hiddenRecommendationTypes={hiddenRecommendationTypes}
+      onRecommendationVisibilityChange={updateHiddenRecommendationTypes}
+      isRecommendationVisibilityUpdateLoading={isRecommendationVisibilityUpdateLoading}
+      isChangeRecommendationVisibilityAllowed={isChangeRecommendationVisibilityAllowed}
       downloadLimit={downloadLimit}
       riSpExpensesSummary={riSpExpensesSummary}
       isRiSpExpensesSummaryLoading={isRiSpExpensesSummaryLoading}

@@ -7,6 +7,7 @@ import { SPACING_2 } from "utils/layouts";
 import { TODO } from "utils/types";
 import Cards from "./Cards";
 import { RecommendationsFilter, ServicesFilter, VIEW_CARDS, VIEW_TABLE, View } from "./Filters";
+import RecommendationCardsSettings from "./RecommendationCardsSettings";
 import BaseRecommendation, { STATUS } from "./recommendations/BaseRecommendation";
 import useStyles from "./RecommendationsOverview.styles";
 import RecommendationsTable from "./RecommendationsTable";
@@ -17,7 +18,7 @@ type RecommendationsOverviewProps = {
   isDataReady: boolean;
   recommendationClasses: { [key: string]: new (status: string, data: TODO) => BaseRecommendation };
   recommendationsData: TODO;
-  onRecommendationClick: (id: string) => void;
+  onRecommendationClick: (recommendation: BaseRecommendation) => void;
   riSpExpensesSummary: { computeExpensesCoveredWithCommitments: number; totalCostWithOffer: number; totalSaving: number };
   isRiSpExpensesSummaryLoading: boolean;
   setSearch: (search: string) => void;
@@ -33,6 +34,10 @@ type RecommendationsOverviewProps = {
   isGetIsDownloadAvailableLoading: boolean;
   selectedDataSourceIds: string[];
   selectedDataSourceTypes: string[];
+  hiddenRecommendationTypes: string[];
+  onRecommendationVisibilityChange: (hiddenRecommendationTypes: string[]) => void;
+  isRecommendationVisibilityUpdateLoading: boolean;
+  isChangeRecommendationVisibilityAllowed: boolean;
   lastCompleted: number;
   totalSaving: number;
   nextRun: number;
@@ -79,6 +84,10 @@ const RecommendationsOverview = ({
   isGetIsDownloadAvailableLoading,
   selectedDataSourceIds,
   selectedDataSourceTypes,
+  hiddenRecommendationTypes,
+  onRecommendationVisibilityChange,
+  isRecommendationVisibilityUpdateLoading,
+  isChangeRecommendationVisibilityAllowed,
   lastCompleted,
   totalSaving,
   nextRun,
@@ -87,8 +96,12 @@ const RecommendationsOverview = ({
   const { classes } = useStyles();
   const checkDone = lastCompleted !== 0;
 
-  const recommendations = Object.values(recommendationClasses)
-    .map((RecommendationClass) => new RecommendationClass(STATUS.ACTIVE, recommendationsData))
+  const allRecommendations = Object.values(recommendationClasses).map(
+    (RecommendationClass) => new RecommendationClass(STATUS.ACTIVE, recommendationsData)
+  );
+
+  const recommendations = allRecommendations
+    .filter(({ type }) => !hiddenRecommendationTypes.includes(type))
     .filter(categoryFilter(category))
     .filter(serviceFilter(service))
     .filter(searchFilter(search))
@@ -122,6 +135,13 @@ const RecommendationsOverview = ({
           </Box>
           <Box className={classes.actionBarPart}>
             <View onChange={setView} value={view} />
+            <RecommendationCardsSettings
+              recommendations={allRecommendations}
+              hiddenRecommendationTypes={hiddenRecommendationTypes}
+              onChange={onRecommendationVisibilityChange}
+              isLoading={isRecommendationVisibilityUpdateLoading}
+              isChangeSettingsAllowed={isChangeRecommendationVisibilityAllowed}
+            />
             <SearchInput onSearch={setSearch} initialSearchText={search} />
           </Box>
         </Box>

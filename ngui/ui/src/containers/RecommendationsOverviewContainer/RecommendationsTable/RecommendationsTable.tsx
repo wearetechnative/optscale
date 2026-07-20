@@ -14,7 +14,7 @@ type RecommendationsTableProps = {
   isLoading: boolean;
   recommendations: BaseRecommendation[];
   downloadLimit?: number;
-  onRecommendationClick: (id: string) => void;
+  onRecommendationClick: (recommendation: BaseRecommendation) => void;
   isDownloadAvailable: boolean;
   isGetIsDownloadAvailableLoading: boolean;
   selectedDataSourceIds: string[];

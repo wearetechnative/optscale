@@ -13,7 +13,7 @@ type CardsProps = {
   isLoading: boolean;
   downloadLimit?: number;
   recommendations: BaseRecommendation[];
-  onRecommendationClick: (id: string) => void;
+  onRecommendationClick: (recommendation: BaseRecommendation) => void;
   isDownloadAvailable: boolean;
   isGetIsDownloadAvailableLoading: boolean;
   selectedDataSourceIds: string[];
