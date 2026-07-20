@@ -31,13 +31,12 @@ const RecommendationCardsSettings = ({
 
   return (
     <Popover
-      disabled={!isChangeSettingsAllowed || isLoading}
+      disabled={!isChangeSettingsAllowed}
       label={
         <IconButton
           icon={<SettingsOutlinedIcon />}
           dataTestId="btn_recommendation_cards_settings"
           disabled={!isChangeSettingsAllowed}
-          isLoading={isLoading}
           tooltip={{
             show: true,
             messageId: isChangeSettingsAllowed ? "recommendationCardsSettings" : "youDoNotHaveEnoughPermissions",
