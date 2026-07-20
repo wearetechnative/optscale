@@ -3,7 +3,7 @@ import { useIntl } from "react-intl";
 import { formatCompactNumber } from "components/CompactFormattedNumber";
 import { IEC_UNITS, formatDigitalUnit } from "components/FormattedDigitalUnit";
 import { isEmptyArray } from "utils/arrays";
-import { getAverageLineValue, getTotalLineValue } from "utils/charts";
+import { getAverageLineValue, getMaxLineValue, getTotalLineValue } from "utils/charts";
 import { METRIC_TYPES } from "utils/constants";
 import { CHART_VALUE_TYPES } from "./constants";
 import getChartProps from "./getChartProps";
@@ -23,9 +23,9 @@ const cpuMetricChartProps = ({ metricType, metrics, colors, intl }) => {
         data: formattedData,
       },
       markerData: {
-        name: "cpuAverage",
-        value: getAverageLineValue(formattedData),
-        dataTestIdName: "cpuMaximum,",
+        name: "cpuMaximum",
+        value: getMaxLineValue(formattedData),
+        dataTestIdName: "cpu_maximum",
       },
     };
   };

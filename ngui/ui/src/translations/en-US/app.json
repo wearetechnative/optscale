@@ -416,6 +416,7 @@
   "cpu": "CPU",
   "cpuAverage": "CPU (average)",
   "cpuHourlyPrice": "CPU hourly price",
+  "cpuMaximum": "CPU (maximum)",
   "cpuPerHour": "CPU per hour",
   "cpuUptime": "CPU uptime",
   "cpuUsage": "CPU usage",

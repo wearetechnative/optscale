@@ -494,6 +494,11 @@ export const getAverageLineValue = (lineData) => {
   return getArithmeticMean(lineValues);
 };
 
+export const getMaxLineValue = (lineData) => {
+  const lineValues = getLineValues(lineData).filter((value) => value !== null);
+  return Math.max(...lineValues);
+};
+
 export const getTotalLineValue = (lineData) => {
   const lineValues = getLineValues(lineData);
   return getElementsSum(lineValues);
