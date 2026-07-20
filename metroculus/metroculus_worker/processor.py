@@ -269,8 +269,8 @@ class MetricsProcessor(object):
                     r_id, datetime.fromtimestamp(0))
                 start_date = max(last_metric_date, start_period) + timedelta(
                     seconds=METRIC_INTERVAL)
-                if start_date + timedelta(hours=2) > last_seen:
-                    continue
+                # if start_date + timedelta(hours=2) > last_seen:
+                #     continue
                 resource_ids_map[resource['cloud_resource_id']] = r_id
                 cloud_resource_id = resource['cloud_resource_id']
                 if cloud_type == NEBIUS_CLOUD_TYPE:
@@ -328,10 +328,10 @@ class MetricsProcessor(object):
                         resource_map, r_type, adapter, region, start_date,
                         end_date):
         result = []
-        metric_map = {
-            'Instance': {
-                'cpu': [('AWS/EC2', 'CPUUtilization',
-                         {'statistics': 'Maximum',
+                            metric_map = {
+                                'Instance': {
+                                    'cpu': [('AWS/EC2', 'CPUUtilization',
+                                            {'statistics': 'Maximum',
                           'dimension': 'InstanceId'})],
                 'ram': [('CWAgent', 'mem_used_percent',
                          {'statistics': 'Average',
