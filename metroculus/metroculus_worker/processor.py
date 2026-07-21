@@ -328,10 +328,10 @@ class MetricsProcessor(object):
                         resource_map, r_type, adapter, region, start_date,
                         end_date):
         result = []
-                            metric_map = {
-                                'Instance': {
-                                    'cpu': [('AWS/EC2', 'CPUUtilization',
-                                            {'statistics': 'Maximum',
+        metric_map = {
+            'Instance': {
+                'cpu': [('AWS/EC2', 'CPUUtilization',
+                         {'statistics': 'Maximum',
                           'dimension': 'InstanceId'})],
                 'ram': [('CWAgent', 'mem_used_percent',
                          {'statistics': 'Average',
