@@ -37,6 +37,9 @@ const RecommendationsOverviewContainerMocked = () => {
         }}
         isRiSpExpensesSummaryLoading={false}
         hiddenRecommendationTypes={[]}
+        onRecommendationVisibilityChange={fn}
+        isRecommendationVisibilityUpdateLoading={false}
+        isChangeRecommendationVisibilityAllowed
       />
     </PageMockupContextProvider>
   );

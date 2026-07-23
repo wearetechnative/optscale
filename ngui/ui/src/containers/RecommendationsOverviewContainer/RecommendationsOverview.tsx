@@ -7,6 +7,7 @@ import { SPACING_2 } from "utils/layouts";
 import { TODO } from "utils/types";
 import Cards from "./Cards";
 import { RecommendationsFilter, ServicesFilter, VIEW_CARDS, VIEW_TABLE, View } from "./Filters";
+import RecommendationCardsSettings from "./RecommendationCardsSettings";
 import BaseRecommendation, { STATUS } from "./recommendations/BaseRecommendation";
 import useStyles from "./RecommendationsOverview.styles";
 import RecommendationsTable from "./RecommendationsTable";
@@ -17,7 +18,7 @@ type RecommendationsOverviewProps = {
   isDataReady: boolean;
   recommendationClasses: { [key: string]: new (status: string, data: TODO) => BaseRecommendation };
   recommendationsData: TODO;
-  onRecommendationClick: (id: string) => void;
+  onRecommendationClick: (recommendation: BaseRecommendation) => void;
   riSpExpensesSummary: { computeExpensesCoveredWithCommitments: number; totalCostWithOffer: number; totalSaving: number };
   isRiSpExpensesSummaryLoading: boolean;
   setSearch: (search: string) => void;
@@ -34,6 +35,9 @@ type RecommendationsOverviewProps = {
   selectedDataSourceIds: string[];
   selectedDataSourceTypes: string[];
   hiddenRecommendationTypes: string[];
+  onRecommendationVisibilityChange: (hiddenRecommendationTypes: string[]) => void;
+  isRecommendationVisibilityUpdateLoading: boolean;
+  isChangeRecommendationVisibilityAllowed: boolean;
   lastCompleted: number;
   totalSaving: number;
   nextRun: number;
@@ -60,11 +64,6 @@ const sortRecommendation = (recommendationA: BaseRecommendation, recommendationB
   return recommendationB.count - recommendationA.count;
 };
 
-const isHiddenRecommendation = (recommendation: BaseRecommendation, hiddenRecommendationTypes: string[]) =>
-  hiddenRecommendationTypes.includes(recommendation.type) ||
-  hiddenRecommendationTypes.includes(recommendation.name) ||
-  hiddenRecommendationTypes.includes(recommendation.title);
-
 const RecommendationsOverview = ({
   isDataReady,
   recommendationClasses,
@@ -86,6 +85,9 @@ const RecommendationsOverview = ({
   selectedDataSourceIds,
   selectedDataSourceTypes,
   hiddenRecommendationTypes,
+  onRecommendationVisibilityChange,
+  isRecommendationVisibilityUpdateLoading,
+  isChangeRecommendationVisibilityAllowed,
   lastCompleted,
   totalSaving,
   nextRun,
@@ -98,22 +100,19 @@ const RecommendationsOverview = ({
     (RecommendationClass) => new RecommendationClass(STATUS.ACTIVE, recommendationsData)
   );
 
-  const visibleRecommendations = allRecommendations.filter(
-    (recommendation) => !isHiddenRecommendation(recommendation, hiddenRecommendationTypes)
-  );
-
-  const hiddenTotalSaving = allRecommendations
-    .filter((recommendation) => isHiddenRecommendation(recommendation, hiddenRecommendationTypes))
-    .reduce((sum, recommendation) => sum + recommendation.saving, 0);
-
-  const visibleTotalSaving = Math.max(totalSaving - hiddenTotalSaving, 0);
-
-  const recommendations = visibleRecommendations
+  const recommendations = allRecommendations
+    .filter(({ type }) => !hiddenRecommendationTypes.includes(type))
     .filter(categoryFilter(category))
     .filter(serviceFilter(service))
     .filter(searchFilter(search))
     .filter(appliedDataSourcesFilter(selectedDataSourceTypes))
     .sort(sortRecommendation);
+
+  const hiddenTotalSaving = allRecommendations
+    .filter(({ type }) => hiddenRecommendationTypes.includes(type))
+    .reduce((sum, recommendation) => sum + recommendation.saving, 0);
+
+  const visibleTotalSaving = Math.max(totalSaving - hiddenTotalSaving, 0);
 
   return (
     <Stack spacing={SPACING_2}>
@@ -142,6 +141,13 @@ const RecommendationsOverview = ({
           </Box>
           <Box className={classes.actionBarPart}>
             <View onChange={setView} value={view} />
+            <RecommendationCardsSettings
+              recommendations={allRecommendations}
+              hiddenRecommendationTypes={hiddenRecommendationTypes}
+              onChange={onRecommendationVisibilityChange}
+              isLoading={isRecommendationVisibilityUpdateLoading}
+              isChangeSettingsAllowed={isChangeRecommendationVisibilityAllowed}
+            />
             <SearchInput onSearch={setSearch} initialSearchText={search} />
           </Box>
         </Box>
