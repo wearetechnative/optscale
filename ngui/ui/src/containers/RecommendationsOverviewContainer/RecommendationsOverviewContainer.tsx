@@ -24,7 +24,11 @@ import { useControlState } from "./redux/controlsState/hooks";
 import { VALUE_ACCESSORS } from "./redux/controlsState/reducer";
 
 const OPTION_PREFIX = "recommendation_";
-const HIDDEN_RECOMMENDATION_CARDS_OPTION_NAME = "dashboard_hidden_recommendation_cards";
+const HIDDEN_RECOMMENDATION_CARDS_OPTION_NAMES = [
+  "dashboard_hidden_recommendation_cards",
+  "hidden_recommendation_cards",
+  "recommendation_cards_settings",
+];
 
 const getHiddenRecommendationTypes = (
   optionValue?: string | string[] | { hiddenRecommendationTypes?: string[] }
@@ -45,7 +49,27 @@ const getHiddenRecommendationTypes = (
     return [];
   }
 
-  return Array.isArray(parsedOptionValue.hiddenRecommendationTypes) ? parsedOptionValue.hiddenRecommendationTypes : [];
+  const hiddenRecommendationTypes =
+    parsedOptionValue.hiddenRecommendationTypes ??
+    parsedOptionValue.disabledRecommendationTypes ??
+    parsedOptionValue.hiddenCards ??
+    parsedOptionValue.disabledCards;
+
+  return Array.isArray(hiddenRecommendationTypes) ? hiddenRecommendationTypes : [];
+};
+
+const getHiddenRecommendationTypesFromOptions = (options) => {
+  for (const optionName of HIDDEN_RECOMMENDATION_CARDS_OPTION_NAMES) {
+    const hiddenRecommendationTypes = getHiddenRecommendationTypes(
+      options.find(({ name }: { name: string }) => name === optionName)?.value
+    );
+
+    if (hiddenRecommendationTypes.length !== 0) {
+      return hiddenRecommendationTypes;
+    }
+  }
+
+  return [];
 };
 
 type RecommendationsOverviewContainerProps = {
@@ -113,9 +137,7 @@ const RecommendationsOverviewContainer = ({
     )
     .reduce((result, { name, value }) => ({ ...result, [name.slice(OPTION_PREFIX.length)]: value }), {});
 
-  const hiddenRecommendationTypes = getHiddenRecommendationTypes(
-    options.find(({ name }: { name: string }) => name === HIDDEN_RECOMMENDATION_CARDS_OPTION_NAME)?.value
-  );
+  const hiddenRecommendationTypes = getHiddenRecommendationTypesFromOptions(options);
 
   const openSideModal = useOpenSideModal();
 

@@ -60,6 +60,11 @@ const sortRecommendation = (recommendationA: BaseRecommendation, recommendationB
   return recommendationB.count - recommendationA.count;
 };
 
+const isHiddenRecommendation = (recommendation: BaseRecommendation, hiddenRecommendationTypes: string[]) =>
+  hiddenRecommendationTypes.includes(recommendation.type) ||
+  hiddenRecommendationTypes.includes(recommendation.name) ||
+  hiddenRecommendationTypes.includes(recommendation.title);
+
 const RecommendationsOverview = ({
   isDataReady,
   recommendationClasses,
@@ -94,11 +99,11 @@ const RecommendationsOverview = ({
   );
 
   const visibleRecommendations = allRecommendations.filter(
-    (recommendation) => !hiddenRecommendationTypes.includes(recommendation.type)
+    (recommendation) => !isHiddenRecommendation(recommendation, hiddenRecommendationTypes)
   );
 
   const hiddenTotalSaving = allRecommendations
-    .filter((recommendation) => hiddenRecommendationTypes.includes(recommendation.type))
+    .filter((recommendation) => isHiddenRecommendation(recommendation, hiddenRecommendationTypes))
     .reduce((sum, recommendation) => sum + recommendation.saving, 0);
 
   const visibleTotalSaving = Math.max(totalSaving - hiddenTotalSaving, 0);
