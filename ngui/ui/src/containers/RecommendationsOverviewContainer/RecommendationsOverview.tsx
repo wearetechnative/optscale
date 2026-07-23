@@ -33,6 +33,7 @@ type RecommendationsOverviewProps = {
   isGetIsDownloadAvailableLoading: boolean;
   selectedDataSourceIds: string[];
   selectedDataSourceTypes: string[];
+  hiddenRecommendationTypes: string[];
   lastCompleted: number;
   totalSaving: number;
   nextRun: number;
@@ -79,6 +80,7 @@ const RecommendationsOverview = ({
   isGetIsDownloadAvailableLoading,
   selectedDataSourceIds,
   selectedDataSourceTypes,
+  hiddenRecommendationTypes,
   lastCompleted,
   totalSaving,
   nextRun,
@@ -87,8 +89,21 @@ const RecommendationsOverview = ({
   const { classes } = useStyles();
   const checkDone = lastCompleted !== 0;
 
-  const recommendations = Object.values(recommendationClasses)
-    .map((RecommendationClass) => new RecommendationClass(STATUS.ACTIVE, recommendationsData))
+  const allRecommendations = Object.values(recommendationClasses).map(
+    (RecommendationClass) => new RecommendationClass(STATUS.ACTIVE, recommendationsData)
+  );
+
+  const visibleRecommendations = allRecommendations.filter(
+    (recommendation) => !hiddenRecommendationTypes.includes(recommendation.type)
+  );
+
+  const hiddenTotalSaving = allRecommendations
+    .filter((recommendation) => hiddenRecommendationTypes.includes(recommendation.type))
+    .reduce((sum, recommendation) => sum + recommendation.saving, 0);
+
+  const visibleTotalSaving = Math.max(totalSaving - hiddenTotalSaving, 0);
+
+  const recommendations = visibleRecommendations
     .filter(categoryFilter(category))
     .filter(serviceFilter(service))
     .filter(searchFilter(search))
@@ -99,7 +114,7 @@ const RecommendationsOverview = ({
     <Stack spacing={SPACING_2}>
       <div>
         <Summary
-          totalSaving={totalSaving}
+          totalSaving={visibleTotalSaving}
           nextRun={nextRun}
           lastCompleted={lastCompleted}
           lastRun={lastRun}

@@ -24,6 +24,29 @@ import { useControlState } from "./redux/controlsState/hooks";
 import { VALUE_ACCESSORS } from "./redux/controlsState/reducer";
 
 const OPTION_PREFIX = "recommendation_";
+const HIDDEN_RECOMMENDATION_CARDS_OPTION_NAME = "dashboard_hidden_recommendation_cards";
+
+const getHiddenRecommendationTypes = (
+  optionValue?: string | string[] | { hiddenRecommendationTypes?: string[] }
+) => {
+  if (!optionValue) {
+    return [];
+  }
+
+  if (Array.isArray(optionValue)) {
+    return optionValue;
+  }
+
+  let parsedOptionValue;
+
+  try {
+    parsedOptionValue = typeof optionValue === "string" ? JSON.parse(optionValue) : optionValue;
+  } catch {
+    return [];
+  }
+
+  return Array.isArray(parsedOptionValue.hiddenRecommendationTypes) ? parsedOptionValue.hiddenRecommendationTypes : [];
+};
 
 type RecommendationsOverviewContainerProps = {
   selectedDataSourceIds: string[];
@@ -90,6 +113,10 @@ const RecommendationsOverviewContainer = ({
     )
     .reduce((result, { name, value }) => ({ ...result, [name.slice(OPTION_PREFIX.length)]: value }), {});
 
+  const hiddenRecommendationTypes = getHiddenRecommendationTypes(
+    options.find(({ name }: { name: string }) => name === HIDDEN_RECOMMENDATION_CARDS_OPTION_NAME)?.value
+  );
+
   const openSideModal = useOpenSideModal();
 
   const onRecommendationClick = useCallback(
@@ -136,6 +163,7 @@ const RecommendationsOverviewContainer = ({
       isGetIsDownloadAvailableLoading={isGetIsDownloadAvailableLoading}
       selectedDataSourceIds={selectedDataSourceIds}
       selectedDataSourceTypes={selectedDataSourceTypes}
+      hiddenRecommendationTypes={hiddenRecommendationTypes}
     />
   );
 };

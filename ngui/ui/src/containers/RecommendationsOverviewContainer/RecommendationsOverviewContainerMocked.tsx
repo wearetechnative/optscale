@@ -36,6 +36,7 @@ const RecommendationsOverviewContainerMocked = () => {
           computeExpensesCoveredWithCommitments: 0.07,
         }}
         isRiSpExpensesSummaryLoading={false}
+        hiddenRecommendationTypes={[]}
       />
     </PageMockupContextProvider>
   );
