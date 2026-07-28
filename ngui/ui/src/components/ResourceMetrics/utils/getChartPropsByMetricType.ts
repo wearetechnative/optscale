@@ -56,9 +56,9 @@ const memoryMetricChartProps = ({ metricType, metrics, colors, intl }) => {
         data: formattedData,
       },
       markerData: {
-        name: "memoryAverage",
-        value: getAverageLineValue(formattedData),
-        dataTestIdName: "memory_average",
+        name: "memoryMaximum",
+        value: getMaxLineValue(formattedData),
+        dataTestIdName: "memory_maximum",
       },
     };
   };

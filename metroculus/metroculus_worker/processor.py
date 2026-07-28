@@ -334,7 +334,7 @@ class MetricsProcessor(object):
                          {'statistics': 'Maximum',
                           'dimension': 'InstanceId'})],
                 'ram': [('CWAgent', 'mem_used_percent',
-                         {'statistics': 'Average',
+                         {'statistics': 'Maximum',
                           'dimension': 'InstanceId'})],
                 'disk_read_io': [('AWS/EC2', 'DiskReadOps',
                                   {'statistics': 'Average',

@@ -1204,7 +1204,7 @@
   "maximumRunsetRunners": "Maximum runset runners",
   "member": "Member",
   "memory": "Memory",
-  "memoryAverage": "Memory (average)",
+  "memoryMaximum": "Memory (maximum)",
   "memoryHours": "Memory used / requests (hours)",
   "memoryPerHour": "Memory per hour",
   "memoryUtilization": "Memory utilization",
