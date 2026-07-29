@@ -1941,7 +1941,7 @@ class Aws(S3CloudMixin):
 
     def get_metric(self, namespace, metric_name, instance_ids, region,
                    interval, start_date, end_date, dimension='InstanceId',
-                   statistics='Average'):
+                   statistics='Average', use_related_dimensions=False):
         """
         Get metric for resources
         :param metric_name: metric name
@@ -1954,6 +1954,39 @@ class Aws(S3CloudMixin):
         :return: dict
         """
         result = {}
+
+        def get_metric_statistics(cloudwatch, params):
+            response = self._retry(cloudwatch.get_metric_statistics, **params)
+            datapoints = response['Datapoints']
+            if datapoints or not use_related_dimensions:
+                return datapoints
+
+            dimension_filter = params['Dimensions'][0]
+            list_metrics_params = {
+                'MetricName': params['MetricName'],
+                'Dimensions': [dimension_filter]
+            }
+            metrics = self._retry(
+                cloudwatch.list_metrics,
+                Namespace=params['Namespace'],
+                **list_metrics_params
+            ).get('Metrics', [])
+            if not metrics:
+                metrics = self._retry(
+                    cloudwatch.list_metrics,
+                    **list_metrics_params
+                ).get('Metrics', [])
+
+            result_datapoints = []
+            for metric in metrics:
+                related_params = params.copy()
+                related_params['Namespace'] = metric['Namespace']
+                related_params['Dimensions'] = metric['Dimensions']
+                response = self._retry(
+                    cloudwatch.get_metric_statistics, **related_params)
+                result_datapoints.extend(response['Datapoints'])
+            return result_datapoints
+
         # TODO: replace parallel calls with proper bulks
         with ThreadPoolExecutor(max_workers=50) as executor:
             futures_map = {}
@@ -1973,9 +2006,9 @@ class Aws(S3CloudMixin):
                     'Statistics': [statistics],
                 }
                 futures_map[instance_id] = executor.submit(
-                    self._retry, cloudwatch.get_metric_statistics, **params)
+                    get_metric_statistics, cloudwatch, params)
             for instance_id, f in futures_map.items():
-                stats = f.result()['Datapoints']
+                stats = f.result()
                 result[instance_id] = stats
         return result
 
