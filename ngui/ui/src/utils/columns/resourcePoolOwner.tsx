@@ -13,7 +13,7 @@ const resourcePoolOwner = ({
 }) => ({
   header: (
     <TextWithDataTestId dataTestId={headerDataTestId}>
-      <FormattedMessage id="pool/owner" />
+      <FormattedMessage id="pool" />
     </TextWithDataTestId>
   ),
   id,

@@ -5,7 +5,7 @@ import TextWithDataTestId from "components/TextWithDataTestId";
 const poolAndOwner = ({ headerDataTestId }) => ({
   header: (
     <TextWithDataTestId dataTestId={headerDataTestId}>
-      <FormattedMessage id="pool/owner" />
+      <FormattedMessage id="pool" />
     </TextWithDataTestId>
   ),
   id: "pool/owner",
