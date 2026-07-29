@@ -14,6 +14,7 @@ import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined
 import RecommendOutlinedIcon from "@mui/icons-material/RecommendOutlined";
 import SwapHorizOutlinedIcon from "@mui/icons-material/SwapHorizOutlined";
 import ToggleOnOutlinedIcon from "@mui/icons-material/ToggleOnOutlined";
+import { Box, Typography } from "@mui/material";
 import { FormattedMessage } from "react-intl";
 import CloudLabel from "components/CloudLabel";
 import PoolLabel from "components/PoolLabel";
@@ -61,6 +62,25 @@ const getRangeAppliedFilterValuesFromSearchParams = (fromParameterName, toParame
   };
 };
 
+const renderDataSourceFilterItem = (item) => (
+  <Box>
+    <CloudLabel id={item.id} name={item.name} type={item.type} disableLink />
+    {item.account_id ? (
+      <Typography variant="caption" color="textSecondary" component="div">
+        {intl.formatMessage({ id: "accountId" })}: {item.account_id}
+      </Typography>
+    ) : null}
+  </Box>
+);
+
+const dataSourceSearchPredicate = (item, query) => {
+  const searchQuery = query.toLowerCase();
+
+  return [item.name, item.account_id, item.id]
+    .filter(Boolean)
+    .some((value) => String(value).toLowerCase().includes(searchQuery));
+};
+
 export const FILTER_CONFIGS = {
   cloudAccountId: {
     id: "cloudAccountId",
@@ -69,7 +89,7 @@ export const FILTER_CONFIGS = {
     label: <FormattedMessage id="dataSource" />,
     labelString: intl.formatMessage({ id: "dataSource" }),
     icon: <CloudOutlinedIcon />,
-    renderItem: (item) => <CloudLabel id={item.id} name={item.name} type={item.type} disableLink />,
+    renderItem: renderDataSourceFilterItem,
     renderSelectedItem: (item) => item.name,
     renderPerspectiveItem: (appliedValue, filterValues, { stringify = false } = {}) => {
       const item = filterValues.find((filterValue) => filterValue.id === appliedValue);
@@ -80,7 +100,7 @@ export const FILTER_CONFIGS = {
 
       return stringify ? item.name : <CloudLabel id={item.id} name={item.name} type={item.type} />;
     },
-    searchPredicate: (item, query) => item.name.toLowerCase().includes(query.toLowerCase()),
+    searchPredicate: dataSourceSearchPredicate,
     getValuesFromSearchParams: () => ({
       values: getSelectionAppliedValuesFromSearchParams("cloudAccountId"),
     }),
