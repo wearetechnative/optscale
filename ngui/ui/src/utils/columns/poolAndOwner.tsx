@@ -1,5 +1,4 @@
 import { FormattedMessage } from "react-intl";
-import CaptionedCell from "components/CaptionedCell";
 import PoolLabel from "components/PoolLabel";
 import TextWithDataTestId from "components/TextWithDataTestId";
 
@@ -15,12 +14,11 @@ const poolAndOwner = ({ headerDataTestId }) => ({
   },
   cell: ({
     row: {
-      original: { pool: { id: poolId, name: poolName, purpose: poolPurpose } = {}, owner: { name: ownerName } = {} },
+      original: { pool: { id: poolId, name: poolName, purpose: poolPurpose } = {} },
     } = {},
   }) => (
-    <CaptionedCell caption={ownerName}>
-      <PoolLabel id={poolId} name={poolName} type={poolPurpose} />
-    </CaptionedCell>
+    // Owner data is kept but not displayed
+    <PoolLabel id={poolId} name={poolName} type={poolPurpose} />
   ),
 });
 

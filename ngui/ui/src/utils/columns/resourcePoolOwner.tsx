@@ -1,5 +1,4 @@
 import { FormattedMessage } from "react-intl";
-import CellCaption from "components/CellCaption";
 import PoolLabel from "components/PoolLabel";
 import TextWithDataTestId from "components/TextWithDataTestId";
 
@@ -36,17 +35,7 @@ const resourcePoolOwner = ({
       <PoolLabel dataTestId={`resource_pool_${rowId}`} id={pool.id} name={pool.name} type={pool.purpose} />
     ) : null;
 
-    const caption = owner ? owner.name : "";
-
-    if (caption) {
-      return (
-        <>
-          {poolLabel}
-          <CellCaption text={caption} typographyProps={{ display: "block" }} />
-        </>
-      );
-    }
-
+    // Owner data is kept but not displayed
     return poolLabel;
   },
 });
