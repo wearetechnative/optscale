@@ -1941,7 +1941,8 @@ class Aws(S3CloudMixin):
 
     def get_metric(self, namespace, metric_name, instance_ids, region,
                    interval, start_date, end_date, dimension='InstanceId',
-                   statistics='Average', use_related_dimensions=False):
+                   statistics='Average', use_related_dimensions=False,
+                   related_dimension_names=None):
         """
         Get metric for resources
         :param metric_name: metric name
@@ -1955,13 +1956,34 @@ class Aws(S3CloudMixin):
         """
         result = {}
 
-        def get_metric_statistics(cloudwatch, params):
-            response = self._retry(cloudwatch.get_metric_statistics, **params)
-            datapoints = response['Datapoints']
-            if datapoints or not use_related_dimensions:
-                return datapoints
+        def get_instance_related_dimensions():
+            if dimension != 'InstanceId' or not related_dimension_names:
+                return {}
+            ec2 = self.get_session().client('ec2', region_name=region)
+            related_dimensions = {}
+            for i in range(0, len(instance_ids), MAX_RESULTS):
+                response = self._retry(
+                    ec2.describe_instances,
+                    InstanceIds=instance_ids[i:i + MAX_RESULTS])
+                for reservation in response['Reservations']:
+                    for instance in reservation['Instances']:
+                        instance_id = instance['InstanceId']
+                        host_values = [
+                            instance.get('PrivateDnsName'),
+                            instance.get('PrivateIpAddress'),
+                            self._extract_tag(instance, 'Name')
+                        ]
+                        private_dns = instance.get('PrivateDnsName')
+                        if private_dns:
+                            host_values.append(private_dns.split('.')[0])
+                        unique_host_values = list(filter(None, dict.fromkeys(
+                            host_values)))
+                        related_dimensions[instance_id] = {
+                            'host': unique_host_values
+                        }
+            return related_dimensions
 
-            dimension_filter = params['Dimensions'][0]
+        def list_related_metrics(cloudwatch, params, dimension_filter):
             list_metrics_params = {
                 'MetricName': params['MetricName'],
                 'Dimensions': [dimension_filter]
@@ -1976,6 +1998,22 @@ class Aws(S3CloudMixin):
                     cloudwatch.list_metrics,
                     **list_metrics_params
                 ).get('Metrics', [])
+            return metrics
+
+        def get_metric_statistics(cloudwatch, params, related_dimensions):
+            response = self._retry(cloudwatch.get_metric_statistics, **params)
+            datapoints = response['Datapoints']
+            if datapoints or not use_related_dimensions:
+                return datapoints
+
+            metrics = list_related_metrics(
+                cloudwatch, params, params['Dimensions'][0])
+            for dimension_name, dimension_values in related_dimensions.items():
+                for dimension_value in dimension_values:
+                    metrics.extend(list_related_metrics(cloudwatch, params, {
+                        'Name': dimension_name,
+                        'Value': dimension_value
+                    }))
 
             result_datapoints = []
             for metric in metrics:
@@ -1988,6 +2026,7 @@ class Aws(S3CloudMixin):
             return result_datapoints
 
         # TODO: replace parallel calls with proper bulks
+        related_dimensions_map = get_instance_related_dimensions()
         with ThreadPoolExecutor(max_workers=50) as executor:
             futures_map = {}
             for instance_id in instance_ids:
@@ -2006,7 +2045,8 @@ class Aws(S3CloudMixin):
                     'Statistics': [statistics],
                 }
                 futures_map[instance_id] = executor.submit(
-                    get_metric_statistics, cloudwatch, params)
+                    get_metric_statistics, cloudwatch, params,
+                    related_dimensions_map.get(instance_id, {}))
             for instance_id, f in futures_map.items():
                 stats = f.result()
                 result[instance_id] = stats
