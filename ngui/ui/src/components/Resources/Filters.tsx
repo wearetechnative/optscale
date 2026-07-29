@@ -123,6 +123,7 @@ const ResourceFilters = ({ filters, appliedFilters, onAppliedFiltersChange }) =>
   const FILTER_GROUPS = {
     primary: [
       { key: "cloudAccountId", data: filters.cloud_account },
+      { key: "accountId", data: filters.cloud_account },
       { key: "poolId", data: filters.pool },
       { key: "ownerId", data: filters.owner },
       { key: "region", data: filters.region },

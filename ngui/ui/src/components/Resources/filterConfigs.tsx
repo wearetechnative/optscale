@@ -1,4 +1,5 @@
 import AppsOutlinedIcon from "@mui/icons-material/AppsOutlined";
+import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
 import BlockOutlinedIcon from "@mui/icons-material/BlockOutlined";
 import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
 import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
@@ -14,7 +15,6 @@ import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined
 import RecommendOutlinedIcon from "@mui/icons-material/RecommendOutlined";
 import SwapHorizOutlinedIcon from "@mui/icons-material/SwapHorizOutlined";
 import ToggleOnOutlinedIcon from "@mui/icons-material/ToggleOnOutlined";
-import { Box, Typography } from "@mui/material";
 import { FormattedMessage } from "react-intl";
 import CloudLabel from "components/CloudLabel";
 import PoolLabel from "components/PoolLabel";
@@ -63,14 +63,7 @@ const getRangeAppliedFilterValuesFromSearchParams = (fromParameterName, toParame
 };
 
 const renderDataSourceFilterItem = (item) => (
-  <Box>
-    <CloudLabel id={item.id} name={item.name} type={item.type} disableLink />
-    {item.account_id ? (
-      <Typography variant="caption" color="textSecondary" component="div">
-        {intl.formatMessage({ id: "accountId" })}: {item.account_id}
-      </Typography>
-    ) : null}
-  </Box>
+  <CloudLabel id={item.id} name={item.name} type={item.type} disableLink />
 );
 
 const dataSourceSearchPredicate = (item, query) => {
@@ -159,6 +152,82 @@ export const FILTER_CONFIGS = {
       },
       appliedFilter: {
         cloudAccountId: {
+          type: "array",
+          items: {
+            type: "string",
+          },
+        },
+      },
+    },
+  },
+  accountId: {
+    id: "accountId",
+    apiName: "account_id",
+    type: "selection",
+    label: <FormattedMessage id="accountId" />,
+    labelString: intl.formatMessage({ id: "accountId" }),
+    icon: <BadgeOutlinedIcon />,
+    renderItem: (item) => item.account_id || intl.formatMessage({ id: "none" }),
+    renderSelectedItem: (item) => item.account_id || intl.formatMessage({ id: "none" }),
+    searchPredicate: (item, query) => {
+      const searchQuery = query.toLowerCase();
+      return item.account_id ? String(item.account_id).toLowerCase().includes(searchQuery) : false;
+    },
+    renderPerspectiveItem: (appliedValue, filterValues) => {
+      const item = filterValues.find((filterValue) => filterValue.account_id === appliedValue);
+      return item ? item.account_id : appliedValue;
+    },
+    getValuesFromSearchParams: () => ({
+      values: getSelectionAppliedValuesFromSearchParams("accountId"),
+    }),
+    getDefaultValue: () => ({
+      values: [],
+    }),
+    isApplied: (appliedFilter) => !isEmptyArray(appliedFilter.values),
+    transformers: {
+      getItems: (availableDataSources) => {
+        const uniqueAccountIds = new Set();
+        const items = [];
+
+        availableDataSources
+          ?.filter((item) => item !== null && item.account_id)
+          .forEach((item) => {
+            if (!uniqueAccountIds.has(item.account_id)) {
+              uniqueAccountIds.add(item.account_id);
+              items.push({
+                account_id: item.account_id,
+                value: item.account_id,
+              });
+            }
+          });
+
+        return items;
+      },
+      getValue: (item) => item.account_id,
+      toApi: (appliedFilter) => ({
+        accountId: appliedFilter.values,
+      }),
+      filterFilterValuesByAppliedFilters: (filterValues, appliedFilters) =>
+        filterValues.filter((filterValue) => appliedFilters.includes(filterValue.account_id)),
+    },
+    schema: {
+      filterValues: {
+        cloud_account: {
+          type: "array",
+          items: {
+            type: "object",
+            nullable: true,
+            properties: {
+              account_id: {
+                type: "string",
+                nullable: true,
+              },
+            },
+          },
+        },
+      },
+      appliedFilter: {
+        accountId: {
           type: "array",
           items: {
             type: "string",
