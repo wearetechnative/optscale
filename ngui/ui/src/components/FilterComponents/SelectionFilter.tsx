@@ -23,6 +23,7 @@ type SelectionStateButtonProps = {
   label: React.ReactNode;
   icon?: React.ReactNode;
   selectionLabel: () => React.ReactNode;
+  disabled?: boolean;
 };
 
 type Value = string;
@@ -55,15 +56,17 @@ type FiltersProps<T extends FilterItem> = {
     name: string;
     label: React.ReactNode;
   }[];
+  disabled?: boolean;
 };
 
-const SelectionStateButton = ({ appliedItems, onClick, id, label, icon, selectionLabel }: SelectionStateButtonProps) => (
+const SelectionStateButton = ({ appliedItems, onClick, id, label, icon, selectionLabel, disabled = false }: SelectionStateButtonProps) => (
   <Button
     aria-describedby={id}
     variant={appliedItems.length > 0 ? "contained" : "outlined"}
     onClick={onClick}
     color="primary"
     startIcon={icon}
+    disabled={disabled}
   >
     {label} ({selectionLabel()})
   </Button>
@@ -79,6 +82,7 @@ const SelectionFilter = <T extends FilterItem>({
   onChange,
   appliedItems,
   settings = [],
+  disabled = false,
 }: FiltersProps<T>) => {
   const intl = useIntl();
 
@@ -300,6 +304,7 @@ const SelectionFilter = <T extends FilterItem>({
         onClick={onOpen}
         id={id}
         label={label}
+        disabled={disabled}
         selectionLabel={() => {
           if (isEmptyArray(appliedItems.values)) {
             return <FormattedMessage id="any" />;

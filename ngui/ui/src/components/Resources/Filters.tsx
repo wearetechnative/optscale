@@ -10,7 +10,7 @@ import { FILTER_CONFIGS } from "components/Resources/filterConfigs";
 import { useCurrentEmployee } from "hooks/coreData/useCurrentEmployee";
 import { endOfDay, moveDateFromUTC, startOfDay } from "utils/datetime";
 
-const getSelectionFilterProps = ({ config, onChange, appliedFilters, data }) => ({
+const getSelectionFilterProps = ({ config, onChange, appliedFilters, data, disabled = false }) => ({
   items: config.transformers.getItems(data),
   label: config.label,
   buttonIcon: config.icon,
@@ -20,6 +20,7 @@ const getSelectionFilterProps = ({ config, onChange, appliedFilters, data }) => 
   onChange: onChange(config.id),
   appliedItems: appliedFilters[config.id],
   settings: config.settings,
+  disabled,
 });
 
 const getRangeFilterProps = ({ config, onChange, appliedFilters }) => ({
@@ -151,6 +152,10 @@ const ResourceFilters = ({ filters, appliedFilters, onAppliedFiltersChange }) =>
     return config.isApplied(appliedFilters[key]);
   };
 
+  // Check if Account ID or Data Source filters are applied (they are mutually exclusive)
+  const isAccountIdApplied = hasAppliedValue('accountId');
+  const isDataSourceApplied = hasAppliedValue('cloudAccountId');
+
   const appliedSecondaryFilters = FILTER_GROUPS.secondary.filter(({ key }) => hasAppliedValue(key));
 
   return (
@@ -166,12 +171,22 @@ const ResourceFilters = ({ filters, appliedFilters, onAppliedFiltersChange }) =>
           constraintViolated: appliedFilters.constraintViolated.values,
         }}
       />
-      {FILTER_GROUPS.primary.map(({ key, data }) => (
-        <SelectionFilter
-          key={key}
-          {...getSelectionFilterProps({ config: FILTER_CONFIGS[key], onChange: handleChange, appliedFilters, data })}
-        />
-      ))}
+      {FILTER_GROUPS.primary.map(({ key, data }) => {
+        // Disable Data Source filter when Account ID is applied, and vice versa
+        let disabled = false;
+        if (key === 'cloudAccountId' && isAccountIdApplied) {
+          disabled = true;
+        } else if (key === 'accountId' && isDataSourceApplied) {
+          disabled = true;
+        }
+
+        return (
+          <SelectionFilter
+            key={key}
+            {...getSelectionFilterProps({ config: FILTER_CONFIGS[key], onChange: handleChange, appliedFilters, data, disabled })}
+          />
+        );
+      })}
       {FILTER_GROUPS.range.map(({ key }) => (
         <RangeFilter
           key={key}
