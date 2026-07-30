@@ -205,11 +205,9 @@ export const FILTER_CONFIGS = {
       },
       getValue: (item) => item.account_id,
       toApi: (appliedFilter) => {
-        // The accountId filter internally maps to cloudAccountId values
-        // This is handled by storing cloud_account_ids in the filter items
-        return {
-          accountId: appliedFilter.values,
-        };
+        // AccountId filter is handled specially in ResourcesContainer
+        // It gets converted to cloudAccountId filter before sending to API
+        return {};
       },
       filterFilterValuesByAppliedFilters: (filterValues, appliedFilters) =>
         filterValues.filter((filterValue) => appliedFilters.includes(filterValue.account_id)),

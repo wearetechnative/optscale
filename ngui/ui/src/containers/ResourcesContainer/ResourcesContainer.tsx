@@ -158,15 +158,29 @@ const ResourcesContainer = () => {
       }
 
       // Special handling for accountId filter - map to cloudAccountId
-      if (key === 'accountId' && value.values && value.values.length > 0) {
-        const cloudAccountIds = availableFiltersData?.availableFilters?.filter_values?.cloud_account
-          ?.filter((ca) => value.values.includes(ca.account_id))
-          .map((ca) => ca.id) || [];
+      if (key === 'accountId') {
+        const filterValue = value as { values?: string[] };
+        if (filterValue?.values && Array.isArray(filterValue.values) && filterValue.values.length > 0) {
+          const selectedAccountIds = filterValue.values;
+          const cloudAccounts = availableFiltersData?.availableFilters?.filter_values?.cloud_account || [];
 
-        return {
-          ...acc,
-          cloudAccountId: [...(acc.cloudAccountId || []), ...cloudAccountIds],
-        };
+          const cloudAccountIds = cloudAccounts
+            .filter((ca: any) => ca && ca.account_id && selectedAccountIds.includes(ca.account_id))
+            .map((ca: any) => ca.id);
+
+          console.log('AccountId Filter Debug:', {
+            selectedAccountIds,
+            cloudAccountIds,
+            allCloudAccounts: cloudAccounts.map((ca: any) => ({ id: ca?.id, account_id: ca?.account_id, name: ca?.name }))
+          });
+
+          return {
+            ...acc,
+            cloudAccountId: [...((acc as any).cloudAccountId || []), ...cloudAccountIds],
+          };
+        }
+        // If accountId is not applied, skip it (don't call toApi)
+        return acc;
       }
 
       return {
