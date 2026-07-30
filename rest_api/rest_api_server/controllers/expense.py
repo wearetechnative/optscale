@@ -746,6 +746,9 @@ class CleanExpenseController(BaseController, MongoMixin, ClickHouseMixin,
                 if entity_v:
                     e_key = key.replace("id", replaced_key)
                     expense.update({e_key: entity_v})
+            # Add account_id for cloud_account
+            if key == 'cloud_account_id' and entity.get('account_id'):
+                expense['cloud_account_account_id'] = entity.get('account_id')
         key_map = {
             'owner_id': (
                 'owner', expense.get('employee_id'), ['id', 'name']),
