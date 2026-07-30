@@ -186,27 +186,31 @@ export const FILTER_CONFIGS = {
     isApplied: (appliedFilter) => !isEmptyArray(appliedFilter.values),
     transformers: {
       getItems: (availableDataSources) => {
-        const uniqueAccountIds = new Set();
-        const items = [];
+        const accountIdMap = new Map();
 
         availableDataSources
           ?.filter((item) => item !== null && item.account_id)
           .forEach((item) => {
-            if (!uniqueAccountIds.has(item.account_id)) {
-              uniqueAccountIds.add(item.account_id);
-              items.push({
+            if (!accountIdMap.has(item.account_id)) {
+              accountIdMap.set(item.account_id, {
                 account_id: item.account_id,
+                cloud_account_ids: [],
                 value: item.account_id,
               });
             }
+            accountIdMap.get(item.account_id).cloud_account_ids.push(item.id);
           });
 
-        return items;
+        return Array.from(accountIdMap.values());
       },
       getValue: (item) => item.account_id,
-      toApi: (appliedFilter) => ({
-        accountId: appliedFilter.values,
-      }),
+      toApi: (appliedFilter) => {
+        // The accountId filter internally maps to cloudAccountId values
+        // This is handled by storing cloud_account_ids in the filter items
+        return {
+          accountId: appliedFilter.values,
+        };
+      },
       filterFilterValuesByAppliedFilters: (filterValues, appliedFilters) =>
         filterValues.filter((filterValue) => appliedFilters.includes(filterValue.account_id)),
     },

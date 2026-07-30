@@ -239,6 +239,9 @@ export const END_DATE_FILTER = "endDate";
 export const CLOUD_ACCOUNT_BE_FILTER = "cloud_account";
 export const CLOUD_ACCOUNT_ID_FILTER = "cloudAccountId";
 
+export const ACCOUNT_ID_BE_FILTER = "account_id";
+export const ACCOUNT_ID_FILTER = "accountId";
+
 export const NETWORK_TRAFFIC_FROM_BE_FILTER = "traffic_from";
 export const NETWORK_TRAFFIC_FROM_FILTER = "networkTrafficFrom";
 

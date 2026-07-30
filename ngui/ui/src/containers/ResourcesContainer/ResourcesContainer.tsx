@@ -137,6 +137,16 @@ const ResourcesContainer = () => {
 
   useListenForPerspectiveChange(selectedPerspectiveDefinition);
 
+  const { data: availableFiltersData, loading: isAvailableFiltersLoading } = useAvailableFiltersQuery({
+    variables: {
+      organizationId,
+      params: {
+        start_date: dateRange.startDate,
+        end_date: dateRange.endDate,
+      },
+    },
+  });
+
   const requestParams = useMemo(() => {
     const queryParams = getSearchParams();
 
@@ -145,6 +155,18 @@ const ResourcesContainer = () => {
 
       if (!config) {
         return acc;
+      }
+
+      // Special handling for accountId filter - map to cloudAccountId
+      if (key === 'accountId' && value.values && value.values.length > 0) {
+        const cloudAccountIds = availableFiltersData?.availableFilters?.filter_values?.cloud_account
+          ?.filter((ca) => value.values.includes(ca.account_id))
+          .map((ca) => ca.id) || [];
+
+        return {
+          ...acc,
+          cloudAccountId: [...(acc.cloudAccountId || []), ...cloudAccountIds],
+        };
       }
 
       return {
@@ -161,7 +183,7 @@ const ResourcesContainer = () => {
       },
       filters: apiFilterParams,
     };
-  }, [dateRange, appliedFilters]);
+  }, [dateRange, appliedFilters, availableFiltersData]);
 
   const flatRequestParams = useMemo(
     () => ({
@@ -175,16 +197,6 @@ const ResourcesContainer = () => {
   useEffect(() => {
     updateSearchParams(requestParams.dateRange);
   }, [requestParams.dateRange]);
-
-  const { data: availableFiltersData, loading: isAvailableFiltersLoading } = useAvailableFiltersQuery({
-    variables: {
-      organizationId,
-      params: {
-        start_date: dateRange.startDate,
-        end_date: dateRange.endDate,
-      },
-    },
-  });
 
   const onApplyDateRange = (dateRange) => {
     setDateRange(dateRange);

@@ -9,6 +9,7 @@ import {
   START_DATE_FILTER,
   END_DATE_FILTER,
   CLOUD_ACCOUNT_ID_FILTER,
+  ACCOUNT_ID_FILTER,
   OWNER_ID_FILTER,
   SERVICE_NAME_FILTER,
   REGION_FILTER,
@@ -34,6 +35,7 @@ import {
 
 export const mapAvailableFilterKeys = (params) => ({
   cloud_account_id: params[CLOUD_ACCOUNT_ID_FILTER],
+  account_id: params[ACCOUNT_ID_FILTER],
   pool_id: params[POOL_ID_FILTER],
   owner_id: params[OWNER_ID_FILTER],
   region: params[REGION_FILTER],
@@ -71,6 +73,7 @@ export const mapFiltersToApiParams = (filters) => {
 
   return {
     cloud_account_id: filters.cloud_account?.map(getObjectValue("id")),
+    account_id: filters.account_id,
     pool_id: filters.pool?.map(getObjectValue("id")),
     owner_id: filters.owner?.map(getObjectValue("id")),
     region: filters.region?.map(getObjectValue("name")),
