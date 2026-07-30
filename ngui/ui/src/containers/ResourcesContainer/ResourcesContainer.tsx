@@ -157,19 +157,24 @@ const ResourcesContainer = () => {
         return acc;
       }
 
-      // Special handling for accountId filter - map to cloudAccountId
+      // Special handling for accountId filter - reuse Data Source filter logic
+      // Since each Data Source IS an account, we just need to find the matching cloud account IDs
       if (key === 'accountId') {
         const filterValue = value as { values?: string[] };
         console.log('[AccountId Filter] Processing:', { key, value, filterValue });
 
         if (filterValue?.values && Array.isArray(filterValue.values) && filterValue.values.length > 0) {
           const selectedAccountIds = filterValue.values;
+
+          // Get the same data that Data Source filter uses
           const cloudAccounts = availableFiltersData?.availableFilters?.filter_values?.cloud_account || [];
 
-          console.log('[AccountId Filter] Cloud Accounts Available:', cloudAccounts.length);
+          console.log('[AccountId Filter] Cloud Accounts from filterValues:', cloudAccounts.length);
 
+          // Map account IDs to cloud account IDs
           const cloudAccountIds = cloudAccounts
             .filter((ca: any) => {
+              // Check if this cloud account's account_id matches any selected account ID
               const matches = ca && ca.account_id && selectedAccountIds.includes(ca.account_id);
               if (matches) {
                 console.log('[AccountId Filter] Matched:', { id: ca.id, account_id: ca.account_id, name: ca.name });
@@ -186,6 +191,7 @@ const ResourcesContainer = () => {
           });
 
           if (cloudAccountIds.length > 0) {
+            // Use the exact same format as Data Source filter (cloudAccountId)
             return {
               ...acc,
               cloudAccountId: [...((acc as any).cloudAccountId || []), ...cloudAccountIds],
