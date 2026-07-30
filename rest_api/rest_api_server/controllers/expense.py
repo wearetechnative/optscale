@@ -801,11 +801,17 @@ class CleanExpenseController(BaseController, MongoMixin, ClickHouseMixin,
 
     def _get_join_entities(self, organization_id, organization_cloud_acc,
                            resources_map=None):
+        # Build cloud account dict with account_id explicitly included
+        cloud_account_dict = {}
+        for cloud_acc in organization_cloud_acc:
+            ca_dict = cloud_acc.to_dict(secure=True)
+            # Ensure account_id is included even if to_dict doesn't include it
+            if 'account_id' not in ca_dict and hasattr(cloud_acc, 'account_id'):
+                ca_dict['account_id'] = cloud_acc.account_id
+            cloud_account_dict[cloud_acc.id] = ca_dict
+
         result = {
-            'cloud_account_id': {
-                cloud_acc.id: cloud_acc.to_dict(
-                    secure=True) for cloud_acc in organization_cloud_acc
-            },
+            'cloud_account_id': cloud_account_dict,
             'owner_id': self._get_object_entities(organization_id, Employee),
             'pool_id': self._get_object_entities(organization_id, Pool),
         }

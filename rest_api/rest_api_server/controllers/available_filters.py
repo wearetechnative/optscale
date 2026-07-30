@@ -76,7 +76,7 @@ class AvailableFiltersController(CleanExpenseController):
                         continue
                     entity = entities.get(entity_key, {}).get(key)
                     result[entity_name][key] = {
-                        i: entity[i] for i in fields
+                        i: entity.get(i) for i in fields
                     } if entity else key
             for field in ['service_name', 'region', 'k8s_node',
                           'k8s_service', 'k8s_namespace']:
@@ -112,7 +112,7 @@ class AvailableFiltersController(CleanExpenseController):
             entities_dict = entities.get(entity_key, {})
             for entity_id, entity in entities_dict.items():
                 result[entity_name].update({
-                    entity_id: {f: entity[f] for f in fields}})
+                    entity_id: {f: entity.get(f) for f in fields}})
         if cl_resource_acc_type_map:
             result.update(self.get_traffic_filters(
                 list(result['cloud_account'].keys()),
