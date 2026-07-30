@@ -172,8 +172,9 @@ const ResourcesContainer = () => {
         if (filterValue?.values && Array.isArray(filterValue.values) && filterValue.values.length > 0) {
           const selectedAccountIds = filterValue.values;
 
-          // Get the same data that Data Source filter uses - from filterValues
-          const cloudAccounts = filterValues.filter_values?.cloud_account || [];
+          // Get the same data that Data Source filter uses
+          // filterValues structure: { cloud_account: [...], pool: [...], owner: [...], ... }
+          const cloudAccounts = filterValues.cloud_account || [];
 
           console.log('[AccountId Filter] Cloud Accounts Available:', cloudAccounts.length);
           console.log('[AccountId Filter] First 3 cloud accounts:', cloudAccounts.slice(0, 3));
