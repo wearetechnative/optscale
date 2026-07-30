@@ -160,24 +160,41 @@ const ResourcesContainer = () => {
       // Special handling for accountId filter - map to cloudAccountId
       if (key === 'accountId') {
         const filterValue = value as { values?: string[] };
+        console.log('[AccountId Filter] Processing:', { key, value, filterValue });
+
         if (filterValue?.values && Array.isArray(filterValue.values) && filterValue.values.length > 0) {
           const selectedAccountIds = filterValue.values;
           const cloudAccounts = availableFiltersData?.availableFilters?.filter_values?.cloud_account || [];
 
+          console.log('[AccountId Filter] Cloud Accounts Available:', cloudAccounts.length);
+
           const cloudAccountIds = cloudAccounts
-            .filter((ca: any) => ca && ca.account_id && selectedAccountIds.includes(ca.account_id))
+            .filter((ca: any) => {
+              const matches = ca && ca.account_id && selectedAccountIds.includes(ca.account_id);
+              if (matches) {
+                console.log('[AccountId Filter] Matched:', { id: ca.id, account_id: ca.account_id, name: ca.name });
+              }
+              return matches;
+            })
             .map((ca: any) => ca.id);
 
-          console.log('AccountId Filter Debug:', {
+          console.log('[AccountId Filter] RESULT:', {
             selectedAccountIds,
             cloudAccountIds,
+            willFilterBy: cloudAccountIds.length > 0 ? 'YES' : 'NO - NO MATCHES FOUND!',
             allCloudAccounts: cloudAccounts.map((ca: any) => ({ id: ca?.id, account_id: ca?.account_id, name: ca?.name }))
           });
 
-          return {
-            ...acc,
-            cloudAccountId: [...((acc as any).cloudAccountId || []), ...cloudAccountIds],
-          };
+          if (cloudAccountIds.length > 0) {
+            return {
+              ...acc,
+              cloudAccountId: [...((acc as any).cloudAccountId || []), ...cloudAccountIds],
+            };
+          } else {
+            console.warn('[AccountId Filter] No cloud accounts matched the selected account IDs!');
+          }
+        } else {
+          console.log('[AccountId Filter] No values selected or invalid structure');
         }
         // If accountId is not applied, skip it (don't call toApi)
         return acc;
@@ -188,6 +205,8 @@ const ResourcesContainer = () => {
         ...config.transformers.toApi(value),
       };
     }, {});
+
+    console.log('[RequestParams] Final API Filter Params:', apiFilterParams);
 
     return {
       limit: Number(queryParams.limit || EXPENSES_LIMIT_FILTER_DEFAULT_VALUE),

@@ -171,6 +171,20 @@ const CleanExpensesTable = ({
       }),
       {
         header: (
+          <TextWithDataTestId dataTestId="lbl_account_id">
+            <FormattedMessage id="accountId" />
+          </TextWithDataTestId>
+        ),
+        accessorKey: "cloud_account_account_id",
+        columnSelector: {
+          accessor: "accountId",
+          messageId: "accountId",
+          dataTestId: "btn_toggle_column_account_id",
+        },
+        cell: ({ row: { original } }) => original.cloud_account_account_id || CELL_EMPTY_VALUE,
+      },
+      {
+        header: (
           <TextWithDataTestId dataTestId="lbl_type">
             <FormattedMessage id="type" />
           </TextWithDataTestId>
