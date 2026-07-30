@@ -9,6 +9,8 @@ export const useBillingSubscription = () => {
       organizationId,
     },
     fetchPolicy: "cache-only",
+    // Suppress GraphQL errors (e.g., 403 Forbidden for users without billing permissions)
+    errorPolicy: "ignore",
   });
 
   return billingSubscription;
