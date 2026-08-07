@@ -60,6 +60,7 @@ CSV_FORMAT_PATTERN = r'\.csv.(gz|zip)$'
 PARQUET_FORMAT_PATTERN = r'\.snappy.parquet$'
 GROUP_DATES_PATTERNS = {
     2: ['BILLING_PERIOD=[0-9]{4}-[0-9]{2}/'],
+    3: ['BILLING_PERIOD=[0-9]{4}-[0-9]{2}/'],  # FOCUS with AWS columns uses same pattern as CUR 2.0
     1: ['[0-9]{8}-[0-9]{8}/',
         'year=[0-9]{4}/month=([1-9]|1[0-2])/']
 }
@@ -1357,7 +1358,8 @@ class Aws(S3CloudMixin):
     def find_reports(self, name=None, raise_on_bad_config=False,
                      search_criteria=None, **kwargs):
         res = []
-        if self.config.get('cur_version') == 2:
+        cur_version = self.config.get('cur_version')
+        if cur_version in [2, 3]:  # Both CUR 2.0 and FOCUS use exports
             reports = self._find_exports()
         else:
             reports = self.cur.describe_report_definitions()['ReportDefinitions']
@@ -1443,8 +1445,8 @@ class Aws(S3CloudMixin):
                 report_name=report_name, bucket_name=bucket_name,
                 prefix=prefix,
                 region=self.config.get('region_name', self.DEFAULT_S3_REGION_NAME))
-            func = create_export if self.config.get(
-                'cur_version') == 2 else create_report
+            cur_version = self.config.get('cur_version')
+            func = create_export if cur_version in [2, 3] else create_report
             self._wrap('create report {}'.format(report_name),
                        func, report_definition)
         resp = self._wrap(
