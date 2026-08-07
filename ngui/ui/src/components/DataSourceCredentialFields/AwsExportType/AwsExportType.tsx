@@ -20,6 +20,10 @@ const AwsExportType = () => (
         value: String(AWS_ROOT_CONNECT_CUR_VERSION.CUR_1),
         label: <FormattedMessage id={AWS_ROOT_CONNECT_CUR_VERSION_MESSAGE_ID[AWS_ROOT_CONNECT_CUR_VERSION.CUR_1]} />,
       },
+      {
+        value: String(AWS_ROOT_CONNECT_CUR_VERSION.CUR_3),
+        label: <FormattedMessage id={AWS_ROOT_CONNECT_CUR_VERSION_MESSAGE_ID[AWS_ROOT_CONNECT_CUR_VERSION.CUR_3]} />,
+      },
     ]}
   />
 );

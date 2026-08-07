@@ -1149,6 +1149,7 @@
   "learningRate": "Learning rate",
   "leftX": "{value} left",
   "legacyCurExport": "Legacy Cost & Usage Reports (CUR) export",
+  "focusExport": "FOCUS with AWS columns",
   "lessIsBetter": "Less is better",
   "lessOrEqual": "This field must be less than or equal to {max}",
   "lessThanForPreviousMonth": "Less than for previous month",

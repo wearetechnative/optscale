@@ -325,11 +325,13 @@ export const AWS_ROOT_CONNECT_CONFIG_SCHEMES = Object.freeze({
 export const AWS_ROOT_CONNECT_CUR_VERSION = Object.freeze({
   CUR_1: 1,
   CUR_2: 2,
+  CUR_3: 3,
 });
 
 export const AWS_ROOT_CONNECT_CUR_VERSION_MESSAGE_ID = Object.freeze({
   [AWS_ROOT_CONNECT_CUR_VERSION.CUR_1]: "legacyCurExport",
   [AWS_ROOT_CONNECT_CUR_VERSION.CUR_2]: "standardDataExport",
+  [AWS_ROOT_CONNECT_CUR_VERSION.CUR_3]: "focusExport",
 });
 
 export const SUMMARY_VALUE_COMPONENT_TYPES = Object.freeze({
