@@ -1092,9 +1092,16 @@ class Aws(S3CloudMixin):
                 'Report name "{}" has incorrect format'.format(report_name))
 
     def _collect_s3_objects(self, bucket_name, prefix, report_name):
+        # For FOCUS exports (cur_version 3), files are in a /data/ subfolder
+        cur_version = self.config.get('cur_version')
+        if cur_version == 3:
+            base_prefix = '{0}/{1}/data/'.format(prefix, report_name)
+        else:
+            base_prefix = '{0}/{1}/'.format(prefix, report_name)
+
         resp = self.s3.list_objects_v2(
             Bucket=bucket_name,
-            Prefix='{0}/{1}/'.format(prefix, report_name),
+            Prefix=base_prefix,
             Delimiter='/'
         )
         result = {'Contents': []}
