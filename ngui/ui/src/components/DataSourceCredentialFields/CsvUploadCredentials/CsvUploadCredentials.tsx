@@ -1,9 +1,8 @@
-import { useState } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { FormattedMessage } from "react-intl";
 import FormHelperText from "@mui/material/FormHelperText";
 import Typography from "@mui/material/Typography";
-import Dropzone from "components/Dropzone";
+import { Dropzone } from "components/Dropzone";
 
 export const FIELD_NAMES = Object.freeze({
   CSV_FILE: "csvFile",
@@ -11,7 +10,6 @@ export const FIELD_NAMES = Object.freeze({
 
 const CsvUploadCredentials = () => {
   const { control, formState: { errors } } = useFormContext();
-  const [file, setFile] = useState(null);
 
   return (
     <>
@@ -34,7 +32,6 @@ const CsvUploadCredentials = () => {
             errorMessageId={errors[FIELD_NAMES.CSV_FILE]?.message}
             onChange={(files) => {
               if (files && files.length > 0) {
-                setFile(files[0]);
                 onChange(files[0]);
               }
             }}
