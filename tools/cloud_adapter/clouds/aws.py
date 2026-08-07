@@ -59,8 +59,8 @@ MAX_RESULTS = 1000
 CSV_FORMAT_PATTERN = r'\.csv.(gz|zip)$'
 PARQUET_FORMAT_PATTERN = r'\.snappy.parquet$'
 GROUP_DATES_PATTERNS = {
-    2: ['BILLING_PERIOD=[0-9]{4}-[0-9]{2}/'],
-    3: ['BILLING_PERIOD=[0-9]{4}-[0-9]{2}/'],  # FOCUS with AWS columns uses same pattern as CUR 2.0
+    2: ['BILLING_PERIOD=[0-9]{4}-[0-9]{2}/', 'billing_period=[0-9]{4}-[0-9]{2}/'],
+    3: ['BILLING_PERIOD=[0-9]{4}-[0-9]{2}/', 'billing_period=[0-9]{4}-[0-9]{2}/'],  # FOCUS with AWS columns (supports both upper and lowercase)
     1: ['[0-9]{8}-[0-9]{8}/',
         'year=[0-9]{4}/month=([1-9]|1[0-2])/']
 }
