@@ -16,6 +16,7 @@ import {
   GCP_TENANT,
   KUBERNETES_CNR,
   NEBIUS,
+  CSV_UPLOAD,
 } from "utils/constants";
 import type { Config, Params } from "./types";
 
@@ -53,6 +54,7 @@ const ConnectCloudAccountContainer = () => {
       [NEBIUS]: "nebiusConfig",
       [DATABRICKS]: "databricksConfig",
       [KUBERNETES_CNR]: "k8sConfig",
+      [CSV_UPLOAD]: "csvUploadConfig",
     }[type];
 
     trackEvent({ category: GA_EVENT_CATEGORIES.DATA_SOURCE, action: "Try connect", label: type });

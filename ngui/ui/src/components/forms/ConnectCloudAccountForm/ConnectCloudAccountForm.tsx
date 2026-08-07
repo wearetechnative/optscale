@@ -23,6 +23,7 @@ import {
   GCP_CREDENTIALS_FIELD_NAMES,
   GCP_TENANT_CREDENTIALS_FIELD_NAMES,
   KUBERNETES_CREDENTIALS_FIELD_NAMES,
+  CSV_UPLOAD_CREDENTIALS_FIELD_NAMES,
 } from "components/DataSourceCredentialFields";
 import FormButtonsWrapper from "components/FormButtonsWrapper";
 import { FIELD_NAMES as NEBIUS_FIELD_NAMES } from "components/NebiusConfigFormElements";
@@ -35,6 +36,7 @@ import DatabricksLogoIcon from "icons/DatabricksLogoIcon";
 import GcpLogoIcon from "icons/GcpLogoIcon";
 import K8sLogoIcon from "icons/K8sLogoIcon";
 import NebiusLogoIcon from "icons/NebiusLogoIcon";
+import CsvUploadIcon from "icons/CsvUploadIcon";
 import {
   DATABRICKS_CREATE_SERVICE_PRINCIPAL,
   DOCS_HYSTAX_CONNECT_ALIBABA_CLOUD,
@@ -59,6 +61,7 @@ import {
   GCP_TENANT,
   KUBERNETES_CNR,
   NEBIUS,
+  CSV_UPLOAD,
   OPTSCALE_CAPABILITY,
 } from "utils/constants";
 import { readFileAsText } from "utils/files";
@@ -90,7 +93,8 @@ type CloudType =
   | typeof ALIBABA_CNR
   | typeof NEBIUS
   | typeof DATABRICKS
-  | typeof KUBERNETES_CNR;
+  | typeof KUBERNETES_CNR
+  | typeof CSV_UPLOAD;
 
 type CloudProviderTypes = Record<
   CloudProvider,
@@ -122,6 +126,7 @@ const CLOUD_PROVIDER_TYPES: CloudProviderTypes = {
   [CLOUD_PROVIDERS.NEBIUS]: { connectionType: CONNECTION_TYPES.NEBIUS, cloudType: NEBIUS },
   [CLOUD_PROVIDERS.DATABRICKS]: { connectionType: CONNECTION_TYPES.DATABRICKS, cloudType: DATABRICKS },
   [CLOUD_PROVIDERS.KUBERNETES]: { connectionType: CONNECTION_TYPES.KUBERNETES, cloudType: KUBERNETES_CNR },
+  [CLOUD_PROVIDERS.CSV_UPLOAD]: { connectionType: CONNECTION_TYPES.CSV_UPLOAD, cloudType: CSV_UPLOAD },
 };
 
 const getCloudProviderFromConnectionType = (connectionType: ConnectionType): CloudProvider => {
@@ -339,6 +344,14 @@ const getDatabricksParameters = (formData: FieldValues) => ({
   },
 });
 
+const getCsvUploadParameters = (formData: FieldValues) => ({
+  name: formData[DATA_SOURCE_NAME_FIELD_NAME],
+  type: CSV_UPLOAD,
+  config: {
+    csv_file: formData[CSV_UPLOAD_CREDENTIALS_FIELD_NAMES.CSV_FILE],
+  },
+});
+
 const renderConnectionTypeDescription = (settings) =>
   settings.map(({ key, messageId, values }, index) => (
     <Typography key={key} style={{ marginBottom: index !== settings.length - 1 ? "1rem" : "" }}>
@@ -469,6 +482,12 @@ const renderConnectionTypeInfoMessage = (connectionType: ConnectionType, authent
       },
     ]),
     [CONNECTION_TYPES.NEBIUS]: null,
+    [CONNECTION_TYPES.CSV_UPLOAD]: renderConnectionTypeDescription([
+      {
+        key: "csvUploadDescription",
+        messageId: "csvUploadDescription",
+      },
+    ]),
   })[connectionType];
 
 const getConnectionTypeFromQueryParams = () => {
@@ -571,6 +590,13 @@ const ConnectCloudAccountForm = ({ onSubmit, onCancel, isLoading = false, showCa
       action: () => setConnectionType(CONNECTION_TYPES.KUBERNETES),
       capability: OPTSCALE_CAPABILITY.FINOPS,
     },
+    {
+      id: CLOUD_PROVIDERS.CSV_UPLOAD,
+      icon: CsvUploadIcon,
+      messageId: "csvUpload",
+      dataTestId: "btn_csv_upload",
+      action: () => setConnectionType(CONNECTION_TYPES.CSV_UPLOAD),
+    },
   ].filter(({ id }) => {
     const providerTypes = CLOUD_PROVIDER_TYPES[id];
 
@@ -659,6 +685,7 @@ const ConnectCloudAccountForm = ({ onSubmit, onCancel, isLoading = false, showCa
                       [NEBIUS]: getNebiusParameters,
                       [KUBERNETES_CNR]: getKubernetesParameters,
                       [DATABRICKS]: getDatabricksParameters,
+                      [CSV_UPLOAD]: getCsvUploadParameters,
                     }[cloudType];
 
                     onSubmit(await getParameters(formData));

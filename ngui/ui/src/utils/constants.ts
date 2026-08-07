@@ -59,6 +59,7 @@ export const ALIBABA_CNR = "alibaba_cnr";
 export const NEBIUS = "nebius";
 export const KUBERNETES_CNR = "kubernetes_cnr";
 export const ENVIRONMENT = "environment";
+export const CSV_UPLOAD = "csv_upload";
 
 export const CLOUD_PROVIDERS = Object.freeze({
   AWS: "aws",
@@ -68,6 +69,7 @@ export const CLOUD_PROVIDERS = Object.freeze({
   NEBIUS: "nebius",
   DATABRICKS: "databricks",
   KUBERNETES: "kubernetes",
+  CSV_UPLOAD: "csv_upload",
 });
 
 export const CONNECTION_TYPES = Object.freeze({
@@ -81,6 +83,7 @@ export const CONNECTION_TYPES = Object.freeze({
   NEBIUS: "nebius",
   DATABRICKS: "databricks",
   KUBERNETES: "kubernetes",
+  CSV_UPLOAD: "csvUpload",
 });
 
 export const CONNECTION_TYPE_SEARCH_PARAMETER = "type";
@@ -98,6 +101,7 @@ export const CLOUD_ACCOUNT_TYPE = Object.freeze({
   [ENVIRONMENT]: "environment",
   [NEBIUS]: "nebius",
   [KUBERNETES_CNR]: "kubernetes",
+  [CSV_UPLOAD]: "csvUpload",
 });
 
 // Expenses

@@ -9,6 +9,7 @@ import {
   DatabricksCredentials,
   KubernetesCredentials,
   NebiusCredentials,
+  CsvUploadCredentials,
 } from "components/DataSourceCredentialFields";
 import {
   BillingReportBucketDescription,
@@ -77,6 +78,8 @@ const ConnectionInputs = ({
       return <DatabricksCredentials />;
     case CONNECTION_TYPES.KUBERNETES:
       return <KubernetesCredentials />;
+    case CONNECTION_TYPES.CSV_UPLOAD:
+      return <CsvUploadCredentials />;
     default:
       return null;
   }

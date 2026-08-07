@@ -15,6 +15,7 @@ import GcpCredentials, { FIELD_NAMES as GCP_CREDENTIALS_FIELD_NAMES } from "./Gc
 import GcpTenantCredentials, { FIELD_NAMES as GCP_TENANT_CREDENTIALS_FIELD_NAMES } from "./GcpTenantCredentials";
 import KubernetesCredentials, { FIELD_NAMES as KUBERNETES_CREDENTIALS_FIELD_NAMES } from "./KubernetesCredentials";
 import NebiusCredentials from "./NebiusCredentials";
+import CsvUploadCredentials, { CSV_UPLOAD_CREDENTIALS_FIELD_NAMES } from "./CsvUploadCredentials";
 
 export {
   AwsAssumedRoleInputs,
@@ -45,4 +46,6 @@ export {
   NebiusCredentials,
   DatabricksCredentials,
   DATABRICKS_CREDENTIALS_FIELD_NAMES,
+  CsvUploadCredentials,
+  CSV_UPLOAD_CREDENTIALS_FIELD_NAMES,
 };
