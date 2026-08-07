@@ -21,6 +21,7 @@ export const useIsDataSourceConnectionTypeEnabled = () => {
         [CONNECTION_TYPES.DATABRICKS]: true,
         [CONNECTION_TYPES.KUBERNETES]: true,
         [CONNECTION_TYPES.NEBIUS]: isNebiusConnectionEnabled,
+        [CONNECTION_TYPES.CSV_UPLOAD]: true,
       })[type] ?? false,
     [isNebiusConnectionEnabled]
   );
