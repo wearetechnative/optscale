@@ -43,7 +43,39 @@ const ConnectCloudAccountContainer = () => {
     return "awsRootConfig";
   };
 
-  const onSubmit = ({ name, config, type }: Params) => {
+  const onSubmit = async ({ name, config, type }: Params) => {
+    trackEvent({ category: GA_EVENT_CATEGORIES.DATA_SOURCE, action: "Try connect", label: type });
+
+    // Handle CSV upload via REST API with FormData
+    if (type === CSV_UPLOAD) {
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('type', type);
+      formData.append('csv_file', config.csv_file);
+
+      try {
+        const response = await fetch(`/restapi/v2/organizations/${organizationId}/cloud_accounts`, {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error?.reason || 'Failed to upload CSV file');
+        }
+
+        refetch([GET_AVAILABLE_FILTERS]);
+        redirectToCloudsOverview();
+      } catch (error) {
+        console.error('CSV upload failed:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        alert(`CSV upload failed: ${errorMessage}`);
+      }
+      return;
+    }
+
+    // Handle other cloud types via GraphQL
     const configName = {
       [AWS_CNR]: getAwsConfigName(config),
       [AZURE_TENANT]: "azureTenantConfig",
@@ -54,10 +86,7 @@ const ConnectCloudAccountContainer = () => {
       [NEBIUS]: "nebiusConfig",
       [DATABRICKS]: "databricksConfig",
       [KUBERNETES_CNR]: "k8sConfig",
-      [CSV_UPLOAD]: "csvUploadConfig",
     }[type];
-
-    trackEvent({ category: GA_EVENT_CATEGORIES.DATA_SOURCE, action: "Try connect", label: type });
 
     createDataSource({
       variables: {
