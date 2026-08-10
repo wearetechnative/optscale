@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import uuid
 from datetime import datetime, timezone
@@ -21,6 +22,7 @@ from rest_api.rest_api_server.utils import (
     check_int_attribute, check_string_attribute, run_task, ModelEncoder)
 
 MAX_BODY_SIZE = 1024 * 1024 * 1024  # 1GB for large CSV files
+LOG = logging.getLogger(__name__)
 
 
 class CloudAccountAsyncCollectionHandler(BaseAsyncCollectionHandler,
@@ -114,11 +116,19 @@ class CloudAccountAsyncCollectionHandler(BaseAsyncCollectionHandler,
             'process_recommendations': False
         }
 
-        # Create cloud account using controller
-        controller = self._get_controller_class()(
-            self._session(), self._config, self.token
-        )
-        result = await run_task(controller.create, **data)
+        # Use the handler controller so it receives the initialized database
+        # session. `_session` is storage for that session, not a callable.
+        try:
+            result = await run_task(self.controller.create, **data)
+        except Exception:
+            # Account creation is the owner of this object. Do not retain an
+            # orphaned upload when validation or persistence fails.
+            try:
+                s3_client.delete_object(Bucket=bucket_name, Key=file_key)
+            except Exception:
+                LOG.exception('Unable to remove orphaned CSV upload %s',
+                              file_key)
+            raise
 
         self.set_status(201)
         self.write(result.to_json())
