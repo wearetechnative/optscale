@@ -213,12 +213,11 @@ class CloudAccountAsyncCollectionHandler(BaseAsyncCollectionHandler,
         - token: []
         """
         organization_id = url_params.get('organization_id')
-        cloud_type = self._request_body().get('type')
-        if cloud_type == CloudTypes.ENVIRONMENT.value:
-            raise OptHTTPError(400, Err.OE0436, [cloud_type])
 
-        # Handle CSV upload
-        if cloud_type == 'csv_upload':
+        # Check if this is a CSV upload (multipart/form-data)
+        content_type = self.request.headers.get("Content-Type", "")
+        if content_type.startswith("multipart/form-data"):
+            # CSV upload - handle multipart
             await self.check_permissions('MANAGE_CLOUD_CREDENTIALS',
                                          'organization', organization_id)
             try:
@@ -226,6 +225,11 @@ class CloudAccountAsyncCollectionHandler(BaseAsyncCollectionHandler,
                 return
             except ForbiddenException as ex:
                 raise OptHTTPError.from_opt_exception(403, ex)
+
+        # Regular cloud account creation (JSON)
+        cloud_type = self._request_body().get('type')
+        if cloud_type == CloudTypes.ENVIRONMENT.value:
+            raise OptHTTPError(400, Err.OE0436, [cloud_type])
 
         await self.check_permissions('MANAGE_CLOUD_CREDENTIALS',
                                      'organization', organization_id)
