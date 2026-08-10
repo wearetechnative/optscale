@@ -1,5 +1,5 @@
 import { Controller, useFormContext } from "react-hook-form";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import FormHelperText from "@mui/material/FormHelperText";
 import Typography from "@mui/material/Typography";
 import { Dropzone } from "components/Dropzone";
@@ -10,6 +10,7 @@ export const FIELD_NAMES = Object.freeze({
 
 const CsvUploadCredentials = () => {
   const { control, formState: { errors } } = useFormContext();
+  const intl = useIntl();
 
   return (
     <>
@@ -22,7 +23,15 @@ const CsvUploadCredentials = () => {
         rules={{
           required: {
             value: true,
-            message: <FormattedMessage id="thisFieldIsRequired" />,
+            message: intl.formatMessage({ id: "thisFieldIsRequired" }),
+          },
+          validate: {
+            isFile: (value) => {
+              if (!value) {
+                return intl.formatMessage({ id: "thisFieldIsRequired" });
+              }
+              return true;
+            },
           },
         }}
         render={({ field: { onChange } }) => (
