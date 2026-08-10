@@ -689,7 +689,7 @@ const ConnectCloudAccountForm = ({ onSubmit, onCancel, isLoading = false, upload
                       [CSV_UPLOAD]: getCsvUploadParameters,
                     }[cloudType];
 
-                    onSubmit(await getParameters(formData));
+                    await onSubmit(await getParameters(formData));
                   })
             }
             noValidate

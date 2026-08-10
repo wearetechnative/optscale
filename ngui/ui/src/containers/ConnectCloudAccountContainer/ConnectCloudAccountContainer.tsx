@@ -49,24 +49,26 @@ const ConnectCloudAccountContainer = () => {
   };
 
   const onSubmit = async ({ name, config, type }: Params) => {
-    console.log('onSubmit called with:', { name, config, type });
     trackEvent({ category: GA_EVENT_CATEGORIES.DATA_SOURCE, action: "Try connect", label: type });
 
     // Handle CSV upload via REST API with FormData and progress tracking
     if (type === CSV_UPLOAD) {
-      console.log('CSV_UPLOAD detected');
-      console.log('config.csv_file:', config.csv_file);
-
       if (!config.csv_file) {
-        console.error('No CSV file provided');
-        alert('Please select a CSV file to upload');
+        alert("Please select a CSV file to upload");
         return;
       }
 
+      let uploadFile = config.csv_file;
+      if (!uploadFile.name.toLowerCase().endsWith(".gz") && typeof CompressionStream !== "undefined") {
+        const compressedStream = uploadFile.stream().pipeThrough(new CompressionStream("gzip"));
+        const compressedBlob = await new Response(compressedStream).blob();
+        uploadFile = new File([compressedBlob], `${uploadFile.name}.gz`, { type: "application/gzip" });
+      }
+
       const formData = new FormData();
-      formData.append('name', name);
-      formData.append('type', type);
-      formData.append('csv_file', config.csv_file);
+      formData.append("name", name);
+      formData.append("type", type);
+      formData.append("csv_file", uploadFile);
 
       setIsUploading(true);
       setUploadProgress(0);
@@ -75,29 +77,26 @@ const ConnectCloudAccountContainer = () => {
         const xhr = new XMLHttpRequest();
 
         // Track upload progress
-        xhr.upload.addEventListener('progress', (event) => {
+        xhr.upload.addEventListener("progress", (event) => {
           if (event.lengthComputable) {
             const percentComplete = Math.round((event.loaded / event.total) * 100);
             setUploadProgress(percentComplete);
-            console.log(`Upload progress: ${percentComplete}%`);
           }
         });
 
         // Handle completion
-        xhr.addEventListener('load', () => {
+        xhr.addEventListener("load", () => {
           setIsUploading(false);
           if (xhr.status >= 200 && xhr.status < 300) {
-            console.log('CSV upload successful');
             refetch([GET_AVAILABLE_FILTERS]);
             redirectToCloudsOverview();
             resolve();
           } else {
-            console.error('CSV upload failed:', xhr.status, xhr.statusText);
-            let errorMessage = 'Failed to upload CSV file';
+            let errorMessage = "Failed to upload CSV file";
             try {
               const error = JSON.parse(xhr.responseText);
               errorMessage = error.error?.reason || errorMessage;
-            } catch (e) {
+            } catch {
               // Ignore JSON parse error
             }
             alert(`CSV upload failed: ${errorMessage}`);
@@ -106,26 +105,24 @@ const ConnectCloudAccountContainer = () => {
         });
 
         // Handle errors
-        xhr.addEventListener('error', () => {
+        xhr.addEventListener("error", () => {
           setIsUploading(false);
-          console.error('CSV upload network error');
-          alert('CSV upload failed: Network error');
-          reject(new Error('Network error'));
+          alert("CSV upload failed: Network error");
+          reject(new Error("Network error"));
         });
 
         // Handle abort
-        xhr.addEventListener('abort', () => {
+        xhr.addEventListener("abort", () => {
           setIsUploading(false);
-          console.log('CSV upload aborted');
-          reject(new Error('Upload aborted'));
+          reject(new Error("Upload aborted"));
         });
 
         // Open and send request
-        xhr.open('POST', `/restapi/v2/organizations/${organizationId}/cloud_accounts`);
+        xhr.open("POST", `/restapi/v2/organizations/${organizationId}/cloud_accounts`);
         xhr.withCredentials = true;
         // Add authorization header
         if (token) {
-          xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+          xhr.setRequestHeader("Authorization", `Bearer ${token}`);
         }
         xhr.send(formData);
       });

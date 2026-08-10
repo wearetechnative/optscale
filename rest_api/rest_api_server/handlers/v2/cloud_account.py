@@ -1,5 +1,10 @@
 import json
+import os
+import uuid
 from datetime import datetime, timezone
+
+import boto3
+from boto3.session import Config as BotoConfig
 from tools.optscale_exceptions.common_exc import (NotFoundException,
                                                   ForbiddenException)
 from tools.optscale_exceptions.common_exc import WrongArgumentsException
@@ -24,11 +29,17 @@ class CloudAccountAsyncCollectionHandler(BaseAsyncCollectionHandler,
     def _get_controller_class(self):
         return CloudAccountAsyncController
 
-    async def prepare(self):
-        """Called before request processing - set max body size for large CSV uploads"""
-        await super().prepare()
-        # Set max body size to allow large CSV files (must be set before body is parsed)
+    def prepare(self):
+        """Set the per-connection limit before validating the request."""
         self.request.connection.set_max_body_size(MAX_BODY_SIZE)
+        super().prepare()
+
+    def _validate_post_parameters(self):
+        # Multipart bodies are parsed by Tornado into arguments/files and are
+        # not JSON payloads. The base implementation only validates JSON.
+        content_type = self.request.headers.get('Content-Type', '')
+        if not content_type.startswith('multipart/form-data'):
+            super()._validate_post_parameters()
 
     def _validate_params(self, **kwargs):
         super()._validate_params(**kwargs)
@@ -39,33 +50,21 @@ class CloudAccountAsyncCollectionHandler(BaseAsyncCollectionHandler,
         if cloud_type == CloudTypes.ENVIRONMENT.value:
             raise OptHTTPError(400, Err.OE0436, [cloud_type])
 
-    async def _handle_csv_upload(self, organization_id, url_params):
+    async def _handle_csv_upload(self, organization_id, _url_params):
         """Handle CSV file upload for cost data"""
-        import uuid
-        import boto3
-        from boto3.session import Config as BotoConfig
-
         # Get uploaded file from request
         if 'csv_file' not in self.request.files:
             raise OptHTTPError(400, Err.OE0216, ['csv_file'])
 
         file_info = self.request.files['csv_file'][0]
-        filename = file_info['filename']
+        filename = os.path.basename(file_info['filename'])
         file_body = file_info['body']
 
         # Validate file extension - accept .csv or .csv.gz
-        if not (filename.lower().endswith('.csv') or filename.lower().endswith('.csv.gz') or filename.lower().endswith('.gz')):
-            raise OptHTTPError(400, Err.OE0214, ['File must be in CSV or CSV.GZ format'])
-
-        # Decompress if gzipped
-        if filename.lower().endswith('.gz'):
-            import gzip
-            file_body = gzip.decompress(file_body)
-            # Remove .gz from filename
-            if filename.lower().endswith('.csv.gz'):
-                filename = filename[:-3]
-            else:
-                filename = filename[:-3] + '.csv'
+        if not (filename.lower().endswith('.csv') or
+                filename.lower().endswith('.csv.gz')):
+            raise OptHTTPError(
+                400, Err.OE0214, ['File must be in CSV or CSV.GZ format'])
 
         # Get name from form data
         name = self.get_argument('name', default=None)
@@ -98,17 +97,18 @@ class CloudAccountAsyncCollectionHandler(BaseAsyncCollectionHandler,
             Bucket=bucket_name,
             Key=file_key,
             Body=file_body,
-            ContentType='text/csv'
+            ContentType=('application/gzip' if filename.lower().endswith('.gz')
+                         else 'text/csv')
         )
 
         # Create cloud account with CSV file reference
         data = {
+            'organization_id': organization_id,
             'name': name,
             'type': 'csv_upload',
-            'csvUploadConfig': {
+            'config': {
                 'csv_file_key': file_key,
                 'bucket_name': bucket_name,
-                'original_filename': filename
             },
             'auto_import': True,
             'process_recommendations': False
@@ -118,10 +118,10 @@ class CloudAccountAsyncCollectionHandler(BaseAsyncCollectionHandler,
         controller = self._get_controller_class()(
             self._session(), self._config, self.token
         )
-        result = await run_task(controller.create, organization_id, **data)
+        result = await run_task(controller.create, **data)
 
         self.set_status(201)
-        self.write(json.dumps(result, cls=ModelEncoder))
+        self.write(result.to_json())
 
     async def post(self, **url_params):
         """

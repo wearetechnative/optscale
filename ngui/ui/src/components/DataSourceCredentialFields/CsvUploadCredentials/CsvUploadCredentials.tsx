@@ -30,27 +30,21 @@ const CsvUploadCredentials = () => {
             },
           },
         }}
-        render={({ field: { onChange, value } }) => {
-          console.log('CsvUploadCredentials - Current value:', value);
-          console.log('CsvUploadCredentials - Errors:', errors);
-          return (
-            <Dropzone
-              acceptedFiles={[".csv", ".gz", "text/csv", "application/vnd.ms-excel", "application/gzip", "application/x-gzip"]}
-              messageId="dropOrSelectCsvFile"
-              errorMessageId={errors[FIELD_NAMES.CSV_FILE]?.message as string}
-              onChange={(files) => {
-                console.log('Dropzone onChange called with files:', files);
-                // Dropzone passes a single File object, not an array
-                if (files) {
-                  console.log('Setting file:', files);
-                  onChange(files);
-                } else {
-                  console.log('No files provided');
-                }
-              }}
-            />
-          );
-        }}
+        render={({ field: { onChange } }) => (
+          <Dropzone
+            acceptedFiles={[
+              ".csv",
+              ".csv.gz",
+              "text/csv",
+              "application/vnd.ms-excel",
+              "application/gzip",
+              "application/x-gzip",
+            ]}
+            messageId="dropOrSelectCsvFile"
+            errorMessageId={errors[FIELD_NAMES.CSV_FILE]?.message as string}
+            onChange={onChange}
+          />
+        )}
       />
       {errors[FIELD_NAMES.CSV_FILE] && (
         <FormHelperText error>

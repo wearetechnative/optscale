@@ -20,7 +20,10 @@ class CsvUpload(CloudBase):
             raise ValueError('CSV file key is required')
 
         return {
-            'account_id': f'csv-upload-{org_id}',
+            # Every uploaded file is a distinct data source. Using only the
+            # organization id made all uploads after the first look like
+            # duplicate cloud accounts.
+            'account_id': 'csv-upload-%s' % csv_file_key.split('/')[-2],
             'warnings': []
         }
 
