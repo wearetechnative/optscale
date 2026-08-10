@@ -188,6 +188,18 @@ class CsvReportImporter(BaseReportImporter):
             } for row in rows]
             self.update_raw_records(chunk)
 
+    def generate_clean_records(self, regeneration=False):
+        # Uploaded files may contain historical data far outside the generic
+        # rolling import window. Build resources and clean expenses from the
+        # actual dates observed in this file.
+        imported_dates = self.imported_raw_dates_map.get(
+            self.cloud_acc_id, {})
+        period_start = imported_dates.get('start_date', self.period_start)
+        resource_ids = self.get_resource_ids(
+            self.cloud_acc_id, period_start)
+        self._generate_clean_records(
+            resource_ids, self.cloud_acc_id, period_start)
+
     def load_raw_data(self):
         """Load and parse CSV file from MinIO storage"""
         csv_file_key = self.cloud_acc['config'].get('csv_file_key')
