@@ -181,8 +181,10 @@ class CsvReportImporter(BaseReportImporter):
                 'cost': row[2],
                 'usage_quantity': row[3],
                 'resource_type': row[4] or 'Unknown',
-                'service_name': row[5],
-                'region': row[6],
+                # Empty optional strings fail REST API validation. Use None so
+                # the validator treats unavailable CSV metadata as omitted.
+                'service_name': row[5] or None,
+                'region': row[6] or None,
                 'cloud_account_id': self.cloud_acc_id,
                 'tags': {},
             } for row in rows]
