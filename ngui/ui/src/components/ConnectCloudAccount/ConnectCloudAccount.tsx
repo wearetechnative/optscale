@@ -17,11 +17,11 @@ const actionBarDefinition = {
   },
 };
 
-const ConnectCloudAccount = ({ isLoading, onSubmit, onCancel }) => (
+const ConnectCloudAccount = ({ isLoading, uploadProgress, onSubmit, onCancel }) => (
   <>
     <ActionBar data={actionBarDefinition} />
     <PageContentWrapper>
-      <ConnectCloudAccountForm isLoading={isLoading} onSubmit={onSubmit} onCancel={onCancel} />
+      <ConnectCloudAccountForm isLoading={isLoading} uploadProgress={uploadProgress} onSubmit={onSubmit} onCancel={onCancel} />
     </PageContentWrapper>
   </>
 );

@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { GET_AVAILABLE_FILTERS } from "api/restapi/actionTypes";
 import ConnectCloudAccount from "components/ConnectCloudAccount";
 import { DataSourcesDocument, useCreateDataSourceMutation } from "graphql/__generated__/hooks/restapi";
@@ -28,6 +29,8 @@ const ConnectCloudAccountContainer = () => {
   const navigate = useNavigate();
 
   const [createDataSource, { loading }] = useCreateDataSourceMutation();
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
 
   const redirectToCloudsOverview = () => navigate(CLOUD_ACCOUNTS);
 
@@ -47,7 +50,7 @@ const ConnectCloudAccountContainer = () => {
     console.log('onSubmit called with:', { name, config, type });
     trackEvent({ category: GA_EVENT_CATEGORIES.DATA_SOURCE, action: "Try connect", label: type });
 
-    // Handle CSV upload via REST API with FormData
+    // Handle CSV upload via REST API with FormData and progress tracking
     if (type === CSV_UPLOAD) {
       console.log('CSV_UPLOAD detected');
       console.log('config.csv_file:', config.csv_file);
@@ -63,26 +66,63 @@ const ConnectCloudAccountContainer = () => {
       formData.append('type', type);
       formData.append('csv_file', config.csv_file);
 
-      try {
-        const response = await fetch(`/restapi/v2/organizations/${organizationId}/cloud_accounts`, {
-          method: 'POST',
-          body: formData,
-          credentials: 'include',
+      setIsUploading(true);
+      setUploadProgress(0);
+
+      return new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+
+        // Track upload progress
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = Math.round((event.loaded / event.total) * 100);
+            setUploadProgress(percentComplete);
+            console.log(`Upload progress: ${percentComplete}%`);
+          }
         });
 
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error?.reason || 'Failed to upload CSV file');
-        }
+        // Handle completion
+        xhr.addEventListener('load', () => {
+          setIsUploading(false);
+          if (xhr.status >= 200 && xhr.status < 300) {
+            console.log('CSV upload successful');
+            refetch([GET_AVAILABLE_FILTERS]);
+            redirectToCloudsOverview();
+            resolve();
+          } else {
+            console.error('CSV upload failed:', xhr.status, xhr.statusText);
+            let errorMessage = 'Failed to upload CSV file';
+            try {
+              const error = JSON.parse(xhr.responseText);
+              errorMessage = error.error?.reason || errorMessage;
+            } catch (e) {
+              // Ignore JSON parse error
+            }
+            alert(`CSV upload failed: ${errorMessage}`);
+            reject(new Error(errorMessage));
+          }
+        });
 
-        refetch([GET_AVAILABLE_FILTERS]);
-        redirectToCloudsOverview();
-      } catch (error) {
-        console.error('CSV upload failed:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        alert(`CSV upload failed: ${errorMessage}`);
-      }
-      return;
+        // Handle errors
+        xhr.addEventListener('error', () => {
+          setIsUploading(false);
+          console.error('CSV upload network error');
+          alert('CSV upload failed: Network error');
+          reject(new Error('Network error'));
+        });
+
+        // Handle abort
+        xhr.addEventListener('abort', () => {
+          setIsUploading(false);
+          console.log('CSV upload aborted');
+          reject(new Error('Upload aborted'));
+        });
+
+        // Open and send request
+        xhr.open('POST', `/restapi/v2/organizations/${organizationId}/cloud_accounts`);
+        xhr.withCredentials = true;
+        xhr.send(formData);
+      });
     }
 
     // Handle other cloud types via GraphQL
@@ -114,7 +154,14 @@ const ConnectCloudAccountContainer = () => {
     });
   };
 
-  return <ConnectCloudAccount isLoading={loading} onSubmit={onSubmit} onCancel={redirectToCloudsOverview} />;
+  return (
+    <ConnectCloudAccount
+      isLoading={loading || isUploading}
+      uploadProgress={isUploading ? uploadProgress : undefined}
+      onSubmit={onSubmit}
+      onCancel={redirectToCloudsOverview}
+    />
+  );
 };
 
 export default ConnectCloudAccountContainer;

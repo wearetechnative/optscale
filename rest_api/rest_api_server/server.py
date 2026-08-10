@@ -5,6 +5,7 @@ import tarfile
 
 import pydevd_pycharm
 import tornado.ioloop
+import tornado.httpserver
 from etcd import Lock as EtcdLock
 from tornado.web import RedirectHandler
 
@@ -550,7 +551,13 @@ def main():
         LOG.exception(exc)
     LOG.info("start listening on port %d", DEFAULT_PORT)
 
-    app.listen(DEFAULT_PORT, decompress_request=True)
+    # Create HTTP server with large max_body_size for CSV uploads
+    http_server = tornado.httpserver.HTTPServer(
+        app,
+        decompress_request=True,
+        max_body_size=1024 * 1024 * 1024  # 1GB
+    )
+    http_server.listen(DEFAULT_PORT)
     tornado.ioloop.IOLoop.instance().start()
 
 

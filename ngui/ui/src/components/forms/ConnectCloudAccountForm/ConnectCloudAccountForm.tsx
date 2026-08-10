@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
+import LinearProgress from "@mui/material/LinearProgress";
 import { FieldValues, FormProvider, useForm } from "react-hook-form";
 import { FormattedMessage } from "react-intl";
 import Button from "components/Button";
@@ -508,7 +509,7 @@ const trackConnectionTypeChangeEvent = (connectionType: ConnectionType) => {
   });
 };
 
-const ConnectCloudAccountForm = ({ onSubmit, onCancel, isLoading = false, showCancel = true }) => {
+const ConnectCloudAccountForm = ({ onSubmit, onCancel, isLoading = false, uploadProgress, showCancel = true }) => {
   const methods = useForm();
 
   const { isRestricted, restrictionReasonMessage } = useOrganizationActionRestrictions();
@@ -695,6 +696,14 @@ const ConnectCloudAccountForm = ({ onSubmit, onCancel, isLoading = false, showCa
           >
             <DataSourceNameField />
             <ConnectionInputs connectionType={connectionType} authenticationType={authenticationType} />
+            {uploadProgress !== undefined && (
+              <Box sx={{ width: '100%', mb: 2 }}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Uploading: {uploadProgress}%
+                </Typography>
+                <LinearProgress variant="determinate" value={uploadProgress} />
+              </Box>
+            )}
             <FormButtonsWrapper justifyContent={!showCancel ? "center" : "left"}>
               <ButtonLoader
                 dataTestId="btn_connect_cloud_account"
