@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import { Dropzone } from "components/Dropzone";
 
 export const FIELD_NAMES = Object.freeze({
-  CSV_FILE: "csvFile",
+  CSV_FILE: "csv_file",
 });
 
 const CsvUploadCredentials = () => {
@@ -21,10 +21,6 @@ const CsvUploadCredentials = () => {
         name={FIELD_NAMES.CSV_FILE}
         control={control}
         rules={{
-          required: {
-            value: true,
-            message: intl.formatMessage({ id: "thisFieldIsRequired" }),
-          },
           validate: {
             isFile: (value) => {
               if (!value) {
@@ -34,11 +30,11 @@ const CsvUploadCredentials = () => {
             },
           },
         }}
-        render={({ field: { onChange } }) => (
+        render={({ field: { onChange, value } }) => (
           <Dropzone
             acceptedFiles={[".csv", "text/csv", "application/vnd.ms-excel"]}
             messageId="dropOrSelectCsvFile"
-            errorMessageId={errors[FIELD_NAMES.CSV_FILE]?.message}
+            errorMessageId={errors[FIELD_NAMES.CSV_FILE]?.message as string}
             onChange={(files) => {
               if (files && files.length > 0) {
                 onChange(files[0]);
