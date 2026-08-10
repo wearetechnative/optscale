@@ -15,6 +15,8 @@ from rest_api.rest_api_server.handlers.v1.base import BaseAuthHandler
 from rest_api.rest_api_server.utils import (
     check_int_attribute, check_string_attribute, run_task, ModelEncoder)
 
+MAX_BODY_SIZE = 1024 * 1024 * 1024  # 1GB for large CSV files
+
 
 class CloudAccountAsyncCollectionHandler(BaseAsyncCollectionHandler,
                                          BaseAuthHandler,
@@ -37,6 +39,9 @@ class CloudAccountAsyncCollectionHandler(BaseAsyncCollectionHandler,
         import boto3
         from boto3.session import Config as BotoConfig
 
+        # Set max body size to allow large CSV files
+        self.request.connection.set_max_body_size(MAX_BODY_SIZE)
+
         # Get uploaded file from request
         if 'csv_file' not in self.request.files:
             raise OptHTTPError(400, Err.OE0216, ['csv_file'])
@@ -45,9 +50,19 @@ class CloudAccountAsyncCollectionHandler(BaseAsyncCollectionHandler,
         filename = file_info['filename']
         file_body = file_info['body']
 
-        # Validate file extension
-        if not filename.lower().endswith('.csv'):
-            raise OptHTTPError(400, Err.OE0214, ['File must be in CSV format'])
+        # Validate file extension - accept .csv or .csv.gz
+        if not (filename.lower().endswith('.csv') or filename.lower().endswith('.csv.gz') or filename.lower().endswith('.gz')):
+            raise OptHTTPError(400, Err.OE0214, ['File must be in CSV or CSV.GZ format'])
+
+        # Decompress if gzipped
+        if filename.lower().endswith('.gz'):
+            import gzip
+            file_body = gzip.decompress(file_body)
+            # Remove .gz from filename
+            if filename.lower().endswith('.csv.gz'):
+                filename = filename[:-3]
+            else:
+                filename = filename[:-3] + '.csv'
 
         # Get name from form data
         name = self.get_argument('name', default=None)

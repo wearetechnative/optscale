@@ -35,7 +35,7 @@ const CsvUploadCredentials = () => {
           console.log('CsvUploadCredentials - Errors:', errors);
           return (
             <Dropzone
-              acceptedFiles={[".csv", "text/csv", "application/vnd.ms-excel"]}
+              acceptedFiles={[".csv", ".gz", "text/csv", "application/vnd.ms-excel", "application/gzip", "application/x-gzip"]}
               messageId="dropOrSelectCsvFile"
               errorMessageId={errors[FIELD_NAMES.CSV_FILE]?.message as string}
               onChange={(files) => {

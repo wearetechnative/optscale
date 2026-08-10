@@ -5,9 +5,9 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/custom-http-errors: "503"
     nginx.ingress.kubernetes.io/default-backend: {{.Values.error_pages.service.name}}
-    nginx.ingress.kubernetes.io/proxy-body-size: "512m"
+    nginx.ingress.kubernetes.io/proxy-body-size: "1024m"
     nginx.ingress.kubernetes.io/connection-proxy-header: "keep-alive"
-    nginx.ingress.kubernetes.io/client-body-buffer-size:  "512m"
+    nginx.ingress.kubernetes.io/client-body-buffer-size:  "1024m"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
     {{- if .Values.ssl.force_redirect }}
