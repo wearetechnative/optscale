@@ -5,6 +5,7 @@ import ConnectCloudAccount from "components/ConnectCloudAccount";
 import { DataSourcesDocument, useCreateDataSourceMutation } from "graphql/__generated__/hooks/restapi";
 import { useOrganizationInfo } from "hooks/useOrganizationInfo";
 import { useRefetchApis } from "hooks/useRefetchApis";
+import { useGetToken } from "hooks/useGetToken";
 import { CLOUD_ACCOUNTS } from "urls";
 import { trackEvent, GA_EVENT_CATEGORIES } from "utils/analytics";
 import {
@@ -23,6 +24,7 @@ import type { Config, Params } from "./types";
 
 const ConnectCloudAccountContainer = () => {
   const { organizationId } = useOrganizationInfo();
+  const { token } = useGetToken();
 
   const refetch = useRefetchApis();
 
@@ -121,6 +123,10 @@ const ConnectCloudAccountContainer = () => {
         // Open and send request
         xhr.open('POST', `/restapi/v2/organizations/${organizationId}/cloud_accounts`);
         xhr.withCredentials = true;
+        // Add authorization header
+        if (token) {
+          xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        }
         xhr.send(formData);
       });
     }
