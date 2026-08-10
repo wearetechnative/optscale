@@ -1,5 +1,5 @@
 from tools.cloud_adapter.clouds.base import CloudBase
-from tools.cloud_adapter.model import CloudParameter
+from tools.cloud_adapter.utils import CloudParameter
 
 
 class CsvUpload(CloudBase):
