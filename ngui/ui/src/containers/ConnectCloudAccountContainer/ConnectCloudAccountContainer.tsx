@@ -44,10 +44,20 @@ const ConnectCloudAccountContainer = () => {
   };
 
   const onSubmit = async ({ name, config, type }: Params) => {
+    console.log('onSubmit called with:', { name, config, type });
     trackEvent({ category: GA_EVENT_CATEGORIES.DATA_SOURCE, action: "Try connect", label: type });
 
     // Handle CSV upload via REST API with FormData
     if (type === CSV_UPLOAD) {
+      console.log('CSV_UPLOAD detected');
+      console.log('config.csv_file:', config.csv_file);
+
+      if (!config.csv_file) {
+        console.error('No CSV file provided');
+        alert('Please select a CSV file to upload');
+        return;
+      }
+
       const formData = new FormData();
       formData.append('name', name);
       formData.append('type', type);
