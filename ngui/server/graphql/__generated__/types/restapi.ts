@@ -377,6 +377,7 @@ export type DataSourceType =
   | "aws_cnr"
   | "azure_cnr"
   | "azure_tenant"
+  | "csv_upload"
   | "databricks"
   | "environment"
   | "gcp_cnr"
@@ -400,6 +401,23 @@ export type DatabricksDataSource = DataSourceInterface & {
   __typename?: "DatabricksDataSource";
   account_id: Scalars["String"]["output"];
   config?: Maybe<DatabricksConfig>;
+  created_at?: Maybe<Scalars["Int"]["output"]>;
+  details?: Maybe<DataSourceDetails>;
+  id: Scalars["String"]["output"];
+  last_getting_metric_attempt_at: Scalars["Int"]["output"];
+  last_getting_metric_attempt_error?: Maybe<Scalars["String"]["output"]>;
+  last_getting_metrics_at: Scalars["Int"]["output"];
+  last_import_at: Scalars["Int"]["output"];
+  last_import_attempt_at: Scalars["Int"]["output"];
+  last_import_attempt_error?: Maybe<Scalars["String"]["output"]>;
+  name: Scalars["String"]["output"];
+  parent_id?: Maybe<Scalars["String"]["output"]>;
+  type: DataSourceType;
+};
+
+export type CsvUploadDataSource = DataSourceInterface & {
+  __typename?: "CsvUploadDataSource";
+  account_id: Scalars["String"]["output"];
   created_at?: Maybe<Scalars["Int"]["output"]>;
   details?: Maybe<DataSourceDetails>;
   id: Scalars["String"]["output"];
@@ -1104,6 +1122,7 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> = 
     | AwsDataSource
     | AzureSubscriptionDataSource
     | AzureTenantDataSource
+    | CsvUploadDataSource
     | DatabricksDataSource
     | EnvironmentDataSource
     | GcpDataSource
@@ -1139,6 +1158,7 @@ export type ResolversTypes = {
   CloudPoliciesParams: CloudPoliciesParams;
   CreateDataSourceInput: CreateDataSourceInput;
   CreateStripeCheckoutSessionInput: CreateStripeCheckoutSessionInput;
+  CsvUploadDataSource: ResolverTypeWrapper<CsvUploadDataSource>;
   DataSourceDetails: ResolverTypeWrapper<DataSourceDetails>;
   DataSourceDiscoveryInfos: ResolverTypeWrapper<DataSourceDiscoveryInfos>;
   DataSourceInterface: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>["DataSourceInterface"]>;
@@ -1227,6 +1247,7 @@ export type ResolversParentTypes = {
   CloudPoliciesParams: CloudPoliciesParams;
   CreateDataSourceInput: CreateDataSourceInput;
   CreateStripeCheckoutSessionInput: CreateStripeCheckoutSessionInput;
+  CsvUploadDataSource: CsvUploadDataSource;
   DataSourceDetails: DataSourceDetails;
   DataSourceDiscoveryInfos: DataSourceDiscoveryInfos;
   DataSourceInterface: ResolversInterfaceTypes<ResolversParentTypes>["DataSourceInterface"];
@@ -1482,6 +1503,7 @@ export type DataSourceInterfaceResolvers<
     | "AwsDataSource"
     | "AzureSubscriptionDataSource"
     | "AzureTenantDataSource"
+    | "CsvUploadDataSource"
     | "DatabricksDataSource"
     | "EnvironmentDataSource"
     | "GcpDataSource"

@@ -31,6 +31,9 @@ const resolvers: Resolvers = {
         case "databricks": {
           return "DatabricksDataSource";
         }
+        case "csv_upload": {
+          return "CsvUploadDataSource";
+        }
         case "kubernetes_cnr": {
           return "K8sDataSource";
         }

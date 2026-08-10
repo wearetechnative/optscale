@@ -13,6 +13,7 @@ export default gql`
     alibaba_cnr
     nebius
     databricks
+    csv_upload
     kubernetes_cnr
     environment
   }
@@ -279,6 +280,23 @@ export default gql`
     last_getting_metric_attempt_error: String
     details: DataSourceDetails
     config: DatabricksConfig
+  }
+
+  # Locally uploaded CSV data source
+  type CsvUploadDataSource implements DataSourceInterface {
+    id: String!
+    created_at: Int
+    name: String!
+    type: DataSourceType!
+    parent_id: String
+    account_id: String!
+    last_import_at: Int!
+    last_import_attempt_at: Int!
+    last_import_attempt_error: String
+    last_getting_metrics_at: Int!
+    last_getting_metric_attempt_at: Int!
+    last_getting_metric_attempt_error: String
+    details: DataSourceDetails
   }
 
   # K8s data source

@@ -25,6 +25,7 @@ import {
   CLOUD_ACCOUNT_TYPE,
   NEBIUS,
   GCP_TENANT,
+  CSV_UPLOAD,
 } from "utils/constants";
 
 export const getSettings = (type) =>
@@ -68,6 +69,11 @@ export const getSettings = (type) =>
     [ENVIRONMENT]: {
       icon: CloudOutlinedIcon,
       cloudTypeMessageId: CLOUD_ACCOUNT_TYPE[ENVIRONMENT],
+    },
+    [CSV_UPLOAD]: {
+      icon: CloudOutlinedIcon,
+      disconnectQuestionId: "disconnectQuestion",
+      cloudTypeMessageId: CLOUD_ACCOUNT_TYPE[CSV_UPLOAD],
     },
     [GCP_CNR]: {
       icon: GcpLogoIcon,

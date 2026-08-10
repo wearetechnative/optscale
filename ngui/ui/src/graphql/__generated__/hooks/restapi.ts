@@ -377,6 +377,7 @@ export type DataSourceType =
   | "aws_cnr"
   | "azure_cnr"
   | "azure_tenant"
+  | "csv_upload"
   | "databricks"
   | "environment"
   | "gcp_cnr"
