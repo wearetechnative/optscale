@@ -12,6 +12,7 @@ class CloudTypes(enum.Enum):
     GCP_TENANT = 'gcp_tenant'
     NEBIUS = 'nebius'
     DATABRICKS = 'databricks'
+    CSV_UPLOAD = 'csv_upload'
 
 
 class ImportStates(enum.Enum):

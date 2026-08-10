@@ -31,6 +31,80 @@ class CloudAccountAsyncCollectionHandler(BaseAsyncCollectionHandler,
         if cloud_type == CloudTypes.ENVIRONMENT.value:
             raise OptHTTPError(400, Err.OE0436, [cloud_type])
 
+    async def _handle_csv_upload(self, organization_id, url_params):
+        """Handle CSV file upload for cost data"""
+        import uuid
+        import boto3
+        from boto3.session import Config as BotoConfig
+
+        # Get uploaded file from request
+        if 'csv_file' not in self.request.files:
+            raise OptHTTPError(400, Err.OE0216, ['csv_file'])
+
+        file_info = self.request.files['csv_file'][0]
+        filename = file_info['filename']
+        file_body = file_info['body']
+
+        # Validate file extension
+        if not filename.lower().endswith('.csv'):
+            raise OptHTTPError(400, Err.OE0214, ['File must be in CSV format'])
+
+        # Get name from form data
+        name = self.get_argument('name', default=None)
+        if not name:
+            raise OptHTTPError(400, Err.OE0216, ['name'])
+
+        # Generate unique file key
+        file_key = f"csv-uploads/{organization_id}/{uuid.uuid4()}/{filename}"
+
+        # Upload to MinIO
+        s3_params = self._config.read_branch('/minio')
+        s3_client = boto3.client(
+            's3',
+            endpoint_url=f"http://{s3_params['host']}:{s3_params['port']}",
+            aws_access_key_id=s3_params['access'],
+            aws_secret_access_key=s3_params['secret'],
+            config=BotoConfig(s3={'addressing_style': 'path'})
+        )
+
+        bucket_name = 'optscale-csv-uploads'
+
+        # Create bucket if it doesn't exist
+        try:
+            s3_client.head_bucket(Bucket=bucket_name)
+        except Exception:
+            s3_client.create_bucket(Bucket=bucket_name)
+
+        # Upload file to MinIO
+        s3_client.put_object(
+            Bucket=bucket_name,
+            Key=file_key,
+            Body=file_body,
+            ContentType='text/csv'
+        )
+
+        # Create cloud account with CSV file reference
+        data = {
+            'name': name,
+            'type': 'csv_upload',
+            'csvUploadConfig': {
+                'csv_file_key': file_key,
+                'bucket_name': bucket_name,
+                'original_filename': filename
+            },
+            'auto_import': True,
+            'process_recommendations': False
+        }
+
+        # Create cloud account using controller
+        controller = self._get_controller_class()(
+            self._session(), self._config, self.token
+        )
+        result = await run_task(controller.create, organization_id, **data)
+
+        self.set_status(201)
+        self.write(json.dumps(result, cls=ModelEncoder))
+
     async def post(self, **url_params):
         """
         ---
@@ -60,7 +134,7 @@ class CloudAccountAsyncCollectionHandler(BaseAsyncCollectionHandler,
                         type: string
                         enum: [aws_cnr, azure_cnr, kubernetes_cnr, alibaba_cnr,
                                azure_tenant, gcp_cnr, nebius, databricks,
-                               gcp_tenant]
+                               gcp_tenant, csv_upload]
                         description: Cloud account type
                         example: aws_cnr
                     config:
@@ -127,6 +201,17 @@ class CloudAccountAsyncCollectionHandler(BaseAsyncCollectionHandler,
         cloud_type = self._request_body().get('type')
         if cloud_type == CloudTypes.ENVIRONMENT.value:
             raise OptHTTPError(400, Err.OE0436, [cloud_type])
+
+        # Handle CSV upload
+        if cloud_type == 'csv_upload':
+            await self.check_permissions('MANAGE_CLOUD_CREDENTIALS',
+                                         'organization', organization_id)
+            try:
+                await self._handle_csv_upload(organization_id, url_params)
+                return
+            except ForbiddenException as ex:
+                raise OptHTTPError.from_opt_exception(403, ex)
+
         await self.check_permissions('MANAGE_CLOUD_CREDENTIALS',
                                      'organization', organization_id)
         try:
