@@ -40,9 +40,10 @@ const CsvUploadCredentials = () => {
               errorMessageId={errors[FIELD_NAMES.CSV_FILE]?.message as string}
               onChange={(files) => {
                 console.log('Dropzone onChange called with files:', files);
-                if (files && files.length > 0) {
-                  console.log('Setting file:', files[0]);
-                  onChange(files[0]);
+                // Dropzone passes a single File object, not an array
+                if (files) {
+                  console.log('Setting file:', files);
+                  onChange(files);
                 } else {
                   console.log('No files provided');
                 }
