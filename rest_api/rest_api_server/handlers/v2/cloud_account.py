@@ -24,6 +24,12 @@ class CloudAccountAsyncCollectionHandler(BaseAsyncCollectionHandler,
     def _get_controller_class(self):
         return CloudAccountAsyncController
 
+    async def prepare(self):
+        """Called before request processing - set max body size for large CSV uploads"""
+        await super().prepare()
+        # Set max body size to allow large CSV files (must be set before body is parsed)
+        self.request.connection.set_max_body_size(MAX_BODY_SIZE)
+
     def _validate_params(self, **kwargs):
         super()._validate_params(**kwargs)
         for unexpected in ['parent_id', 'root_config']:
@@ -38,9 +44,6 @@ class CloudAccountAsyncCollectionHandler(BaseAsyncCollectionHandler,
         import uuid
         import boto3
         from boto3.session import Config as BotoConfig
-
-        # Set max body size to allow large CSV files
-        self.request.connection.set_max_body_size(MAX_BODY_SIZE)
 
         # Get uploaded file from request
         if 'csv_file' not in self.request.files:
