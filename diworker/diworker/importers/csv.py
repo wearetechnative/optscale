@@ -31,6 +31,7 @@ class CsvReportImporter(BaseReportImporter):
             'resource_type',
             'service_name',
             'region',
+            'account_id',
             'tags'
         ]
 
@@ -39,6 +40,7 @@ class CsvReportImporter(BaseReportImporter):
             'start_date',
             'resource_id',
             'cloud_account_id',
+            'account_id',
         ]
 
     def _parse_date(self, date_str):
@@ -114,6 +116,18 @@ class CsvReportImporter(BaseReportImporter):
             'usagequantity': 'usage_quantity',
             'lineitem/usageamount': 'usage_quantity',
             'quantity': 'usage_quantity',
+
+            # Billing/sub-account fields. FOCUS uses SubAccountId, AWS CUR
+            # uses lineItem/UsageAccountId and Azure exports use
+            # SubscriptionId for the equivalent resource owner.
+            'account_id': 'account_id',
+            'subaccountid': 'account_id',
+            'sub_account_id': 'account_id',
+            'lineitem/usageaccountid': 'account_id',
+            'line_item_usage_account_id': 'account_id',
+            'usageaccountid': 'account_id',
+            'subscriptionid': 'account_id',
+            'subscription_id': 'account_id',
         }
 
         normalized = {}
@@ -143,15 +157,16 @@ class CsvReportImporter(BaseReportImporter):
                 resource_type TEXT,
                 service_name TEXT,
                 region TEXT,
-                PRIMARY KEY (start_date, resource_id)
+                account_id TEXT NOT NULL,
+                PRIMARY KEY (start_date, account_id, resource_id)
             )
         ''')
         return db
 
     def _aggregate_row(self, db, expense):
         db.execute('''
-            INSERT INTO expenses VALUES (?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(start_date, resource_id) DO UPDATE SET
+            INSERT INTO expenses VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(start_date, account_id, resource_id) DO UPDATE SET
                 cost = cost + excluded.cost,
                 usage_quantity = usage_quantity + excluded.usage_quantity,
                 resource_type = COALESCE(NULLIF(resource_type, ''),
@@ -163,12 +178,12 @@ class CsvReportImporter(BaseReportImporter):
             expense['start_date'].isoformat(), expense['resource_id'],
             expense['cost'], expense['usage_quantity'],
             expense['resource_type'], expense['service_name'],
-            expense['region']))
+            expense['region'], expense['account_id']))
 
     def _store_aggregated_expenses(self, db):
         cursor = db.execute('''
             SELECT start_date, resource_id, cost, usage_quantity,
-                   resource_type, service_name, region
+                   resource_type, service_name, region, account_id
             FROM expenses
         ''')
         while True:
@@ -185,6 +200,7 @@ class CsvReportImporter(BaseReportImporter):
                 # the validator treats unavailable CSV metadata as omitted.
                 'service_name': row[5] or None,
                 'region': row[6] or None,
+                'account_id': row[7] or None,
                 'cloud_account_id': self.cloud_acc_id,
                 'tags': {},
             } for row in rows]
@@ -262,6 +278,8 @@ class CsvReportImporter(BaseReportImporter):
                             'region': normalized_row.get('region'),
                             'usage_quantity': self._as_float(
                                 normalized_row.get('usage_quantity')),
+                            'account_id': (
+                                normalized_row.get('account_id') or '').strip(),
                         }
                         self._aggregate_row(db, expense)
                         if row_count % SQL_BATCH_SIZE == 0:
@@ -287,6 +305,7 @@ class CsvReportImporter(BaseReportImporter):
         resource_type = None
         service_name = None
         region = None
+        account_id = None
 
         for e in expenses:
             if not resource_type:
@@ -295,6 +314,8 @@ class CsvReportImporter(BaseReportImporter):
                 service_name = e.get('service_name')
             if not region:
                 region = e.get('region')
+            if not account_id:
+                account_id = e.get('account_id')
 
             start_date = e.get('start_date')
             if start_date and start_date < first_seen:
@@ -312,6 +333,7 @@ class CsvReportImporter(BaseReportImporter):
             'resource_type': resource_type,
             'service_name': service_name,
             'region': region,
+            'account_id': account_id,
         }
 
         return info
@@ -323,6 +345,7 @@ class CsvReportImporter(BaseReportImporter):
             'tags': info.get('tags', {}),
             'service_name': info.get('service_name'),
             'region': info.get('region'),
+            'account_id': info.get('account_id'),
             'first_seen': info['first_seen'],
             'last_seen': info['last_seen'],
             'resource_type': info['resource_type'],

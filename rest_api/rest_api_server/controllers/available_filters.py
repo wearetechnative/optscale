@@ -66,6 +66,10 @@ class AvailableFiltersController(CleanExpenseController):
             cloud_account_id = _id.get('cloud_account_id')
             cloud_account = entities.get(
                 'cloud_account_id', {}).get(cloud_account_id, {})
+            resource_account_ids = r.get('account_id', set())
+            if (not any(resource_account_ids) and
+                    cloud_account.get('account_id')):
+                r_sets['account_id'].add(cloud_account['account_id'])
             for cl_res_id in r.pop('cloud_resource_ids', {}):
                 cl_resource_acc_type_map[cl_res_id] = cloud_account.get('type')
             for entity_name, v in self.JOINED_ENTITY_MAP.items():
@@ -105,6 +109,8 @@ class AvailableFiltersController(CleanExpenseController):
                     r_sets[t].update(decoded_tags)
             for k, v in r.items():
                 r_sets[k].update(v)
+        r_sets['account_id'].discard(None)
+        r_sets['account_id'].discard('')
         result.update(r_sets)
         # add all available optscale entities
         for entity_name, v in self.JOINED_ENTITY_MAP.items():
@@ -203,7 +209,8 @@ class AvailableFiltersController(CleanExpenseController):
         last_recommend_run = kwargs['last_recommend_run']
         collected_filters = [
             'service_name', 'pool_id', 'employee_id', 'k8s_node', 'region',
-            'resource_type', 'k8s_namespace', 'k8s_service', 'cloud_account_id'
+            'resource_type', 'k8s_namespace', 'k8s_service', 'cloud_account_id',
+            'account_id'
         ]
         group_stage = {
             f: {'$addToSet': {'$ifNull': ['$%s' % f, None]}}

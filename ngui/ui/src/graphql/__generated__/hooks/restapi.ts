@@ -47,6 +47,7 @@ export type AlibabaDataSource = DataSourceInterface & {
 };
 
 export type AvailableFiltersParams = {
+  account_id?: InputMaybe<Array<Scalars["String"]["input"]>>;
   active?: InputMaybe<Array<Scalars["Boolean"]["input"]>>;
   cloud_account_id?: InputMaybe<Array<Scalars["String"]["input"]>>;
   constraint_violated?: InputMaybe<Array<Scalars["Boolean"]["input"]>>;
@@ -277,6 +278,7 @@ export type BreakdownParams = {
 };
 
 export type CleanExpensesParams = {
+  account_id?: InputMaybe<Array<InputMaybe<Scalars["String"]["input"]>>>;
   active?: InputMaybe<Array<InputMaybe<Scalars["Boolean"]["input"]>>>;
   cloud_account_id?: InputMaybe<Array<InputMaybe<Scalars["String"]["input"]>>>;
   constraint_violated?: InputMaybe<Array<InputMaybe<Scalars["Boolean"]["input"]>>>;

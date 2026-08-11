@@ -124,7 +124,7 @@ const ResourceFilters = ({ filters, appliedFilters, onAppliedFiltersChange }) =>
   const FILTER_GROUPS = {
     primary: [
       { key: "cloudAccountId", data: filters.cloud_account },
-      { key: "accountId", data: filters.cloud_account },
+      { key: "accountId", data: filters.account_id },
       { key: "poolId", data: filters.pool },
       { key: "ownerId", data: filters.owner },
       { key: "region", data: filters.region },
@@ -152,10 +152,6 @@ const ResourceFilters = ({ filters, appliedFilters, onAppliedFiltersChange }) =>
     return config.isApplied(appliedFilters[key]);
   };
 
-  // Check if Account ID or Data Source filters are applied (they are mutually exclusive)
-  const isAccountIdApplied = hasAppliedValue('accountId');
-  const isDataSourceApplied = hasAppliedValue('cloudAccountId');
-
   const appliedSecondaryFilters = FILTER_GROUPS.secondary.filter(({ key }) => hasAppliedValue(key));
 
   return (
@@ -171,22 +167,12 @@ const ResourceFilters = ({ filters, appliedFilters, onAppliedFiltersChange }) =>
           constraintViolated: appliedFilters.constraintViolated.values,
         }}
       />
-      {FILTER_GROUPS.primary.map(({ key, data }) => {
-        // Disable Data Source filter when Account ID is applied, and vice versa
-        let disabled = false;
-        if (key === 'cloudAccountId' && isAccountIdApplied) {
-          disabled = true;
-        } else if (key === 'accountId' && isDataSourceApplied) {
-          disabled = true;
-        }
-
-        return (
-          <SelectionFilter
-            key={key}
-            {...getSelectionFilterProps({ config: FILTER_CONFIGS[key], onChange: handleChange, appliedFilters, data, disabled })}
-          />
-        );
-      })}
+      {FILTER_GROUPS.primary.map(({ key, data }) => (
+        <SelectionFilter
+          key={key}
+          {...getSelectionFilterProps({ config: FILTER_CONFIGS[key], onChange: handleChange, appliedFilters, data })}
+        />
+      ))}
       {FILTER_GROUPS.range.map(({ key }) => (
         <RangeFilter
           key={key}

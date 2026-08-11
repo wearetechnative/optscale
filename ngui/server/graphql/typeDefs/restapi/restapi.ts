@@ -649,6 +649,7 @@ export default gql`
     constraint_violated: [Boolean]
     recommendations: [Boolean]
     cloud_account_id: [String]
+    account_id: [String]
     format: [String]
     k8s_namespace: [String]
     k8s_node: [String]
@@ -678,6 +679,7 @@ export default gql`
     start_date: Int!
     end_date: Int!
     cloud_account_id: [String!]
+    account_id: [String!]
     pool_id: [String!]
     owner_id: [String!]
     region: [String!]

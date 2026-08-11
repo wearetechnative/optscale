@@ -185,46 +185,23 @@ export const FILTER_CONFIGS = {
     }),
     isApplied: (appliedFilter) => !isEmptyArray(appliedFilter.values),
     transformers: {
-      getItems: (availableDataSources) => {
-        const accountIdMap = new Map();
-
-        availableDataSources
-          ?.filter((item) => item !== null && item.account_id)
-          .forEach((item) => {
-            if (!accountIdMap.has(item.account_id)) {
-              accountIdMap.set(item.account_id, {
-                account_id: item.account_id,
-                cloud_account_ids: [],
-                value: item.account_id,
-              });
-            }
-            accountIdMap.get(item.account_id).cloud_account_ids.push(item.id);
-          });
-
-        return Array.from(accountIdMap.values());
-      },
+      getItems: (accountIds) =>
+        accountIds
+          ?.filter(Boolean)
+          .map((accountId) => ({ account_id: accountId, value: accountId })) ?? [],
       getValue: (item) => item.account_id,
-      toApi: (appliedFilter) => {
-        // AccountId filter is handled specially in ResourcesContainer
-        // It gets converted to cloudAccountId filter before sending to API
-        return {};
-      },
+      toApi: (appliedFilter) => ({
+        accountId: appliedFilter.values,
+      }),
       filterFilterValuesByAppliedFilters: (filterValues, appliedFilters) =>
         filterValues.filter((filterValue) => appliedFilters.includes(filterValue.account_id)),
     },
     schema: {
       filterValues: {
-        cloud_account: {
+        account_id: {
           type: "array",
           items: {
-            type: "object",
-            nullable: true,
-            properties: {
-              account_id: {
-                type: "string",
-                nullable: true,
-              },
-            },
+            type: "string",
           },
         },
       },

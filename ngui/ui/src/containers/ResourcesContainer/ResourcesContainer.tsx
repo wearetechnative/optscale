@@ -152,72 +152,10 @@ const ResourcesContainer = () => {
   const requestParams = useMemo(() => {
     const queryParams = getSearchParams();
 
-    // Check if Account ID filter is applied - if yes, it takes precedence over Data Source filter
-    const accountIdFilterValue = appliedFilters['accountId'] as { values?: string[] };
-    const isAccountIdFilterApplied = accountIdFilterValue?.values && Array.isArray(accountIdFilterValue.values) && accountIdFilterValue.values.length > 0;
-
     const apiFilterParams = Object.entries(appliedFilters).reduce((acc, [key, value]) => {
       const config = FILTER_CONFIGS[key];
 
       if (!config) {
-        return acc;
-      }
-
-      // Special handling for accountId filter - reuse Data Source filter logic
-      // Since each Data Source IS an account, we just need to find the matching cloud account IDs
-      if (key === 'accountId') {
-        const filterValue = value as { values?: string[] };
-        console.log('[AccountId Filter] Processing:', { key, value, filterValue });
-
-        if (filterValue?.values && Array.isArray(filterValue.values) && filterValue.values.length > 0) {
-          const selectedAccountIds = filterValue.values;
-
-          // Get the same data that Data Source filter uses
-          // filterValues structure: { cloud_account: [...], pool: [...], owner: [...], ... }
-          const cloudAccounts = filterValues.cloud_account || [];
-
-          console.log('[AccountId Filter] Cloud Accounts Available:', cloudAccounts.length);
-          console.log('[AccountId Filter] First 3 cloud accounts:', cloudAccounts.slice(0, 3));
-
-          // Map account IDs to cloud account UUIDs
-          const cloudAccountIds = cloudAccounts
-            .filter((ca: any) => {
-              // Check if this cloud account's account_id matches any selected account ID
-              const matches = ca && ca.account_id && selectedAccountIds.includes(ca.account_id);
-              if (matches) {
-                console.log('[AccountId Filter] ✓ Matched:', { uuid: ca.id, account_id: ca.account_id, name: ca.name });
-              }
-              return matches;
-            })
-            .map((ca: any) => ca.id);
-
-          console.log('[AccountId Filter] RESULT:', {
-            selectedAccountIds,
-            cloudAccountUUIDs: cloudAccountIds,
-            willFilterBy: cloudAccountIds.length > 0 ? '✓ YES - WILL REPLACE Data Source filter' : '✗ NO - NO MATCHES FOUND!',
-          });
-
-          if (cloudAccountIds.length > 0) {
-            // REPLACE Data Source filter's cloudAccountId (don't merge)
-            // This prevents conflicts when both filters are applied
-            return {
-              ...acc,
-              cloudAccountId: cloudAccountIds,
-            };
-          } else {
-            console.warn('[AccountId Filter] ✗ No cloud accounts matched the selected account IDs!');
-          }
-        } else {
-          console.log('[AccountId Filter] No values selected or invalid structure');
-        }
-        // If accountId is not applied, skip it (don't call toApi)
-        return acc;
-      }
-
-      // Skip Data Source filter (cloudAccountId) if Account ID filter is applied
-      // This prevents conflicts - Account ID takes precedence
-      if (key === 'cloudAccountId' && isAccountIdFilterApplied) {
-        console.log('[DataSource Filter] Skipped - Account ID filter takes precedence');
         return acc;
       }
 
@@ -227,8 +165,6 @@ const ResourcesContainer = () => {
       };
     }, {});
 
-    console.log('[RequestParams] Final API Filter Params:', apiFilterParams);
-
     return {
       limit: Number(queryParams.limit || EXPENSES_LIMIT_FILTER_DEFAULT_VALUE),
       dateRange: {
@@ -237,7 +173,7 @@ const ResourcesContainer = () => {
       },
       filters: apiFilterParams,
     };
-  }, [dateRange, appliedFilters, filterValues]);
+  }, [dateRange, appliedFilters]);
 
   const flatRequestParams = useMemo(
     () => ({

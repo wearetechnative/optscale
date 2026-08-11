@@ -1069,6 +1069,21 @@ class CleanExpenseController(BaseController, MongoMixin, ClickHouseMixin,
         filters: list[dict] = [
             {'deleted_at': 0}
         ]
+        account_ids = params.pop('account_id', None)
+        if account_ids:
+            provider_cloud_account_ids = [x[0] for x in self.session.query(
+                CloudAccount.id
+            ).filter(
+                CloudAccount.organization_id == organization_id,
+                CloudAccount.deleted.is_(False),
+                CloudAccount.account_id.in_(account_ids)
+            ).all()]
+            account_conditions = [{'account_id': {'$in': account_ids}}]
+            if provider_cloud_account_ids:
+                account_conditions.append({
+                    'cloud_account_id': {'$in': provider_cloud_account_ids}
+                })
+            filters.append({'$or': account_conditions})
         first_seen_lte = data_filters.get('first_seen_lte')
         if first_seen_lte is not None:
             end_date = min(end_date, first_seen_lte)

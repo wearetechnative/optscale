@@ -65,6 +65,7 @@ class CloudResourceController(BaseController, MongoMixin, ResourceFormatMixin):
             'first_seen', 'last_seen', 'created_by_kind', 'created_by_name',
             'k8s_namespace', 'k8s_node', 'k8s_service', 'cloud_created_at',
             'shareable', 'env_properties', 'service_name', 'active',
+            'account_id',
             CLOUD_RESOURCE_ID_FIELD, CLOUD_RESOURCE_HASH_FIELD,
             # TODO: OS-4730: leave one allowed field for resource owner id
             'owner_id', 'employee_id', 'power_schedule'
