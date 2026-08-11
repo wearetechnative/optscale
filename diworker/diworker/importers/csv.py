@@ -43,6 +43,38 @@ class CsvReportImporter(BaseReportImporter):
             'account_id',
         ]
 
+    def get_raw_upsert_filters(self, expense):
+        # Rows imported before account support do not have account_id. Match
+        # and upgrade such a row in place so the first account-aware reimport
+        # does not duplicate its cost. Once upgraded, account_id is part of
+        # the identity and identical resource IDs in different sub-accounts
+        # remain separate.
+        return {
+            'start_date': expense['start_date'],
+            'resource_id': expense['resource_id'],
+            'cloud_account_id': expense['cloud_account_id'],
+            '$or': [
+                {'account_id': expense.get('account_id')},
+                {'account_id': {'$exists': False}},
+            ]
+        }
+
+    def create_resources_if_not_exist(
+            self, cloud_account_id, resources_info_map,
+            unique_id_field='cloud_resource_id'):
+        # CSV metadata can change when a newer version of the same file is
+        # imported (including account_id added by a software upgrade).
+        resources_data = [
+            self.get_resource_data(
+                resource_id, info, unique_id_field=unique_id_field)
+            for resource_id, info in resources_info_map.items()
+        ]
+        _, result = self.rest_cl.cloud_resource_create_bulk(
+            cloud_account_id, {'resources': resources_data},
+            behavior='update_existing', return_resources=True,
+            is_report_import=True)
+        return result['resources']
+
     def _parse_date(self, date_str):
         """Parse date from various formats"""
         date_formats = [
