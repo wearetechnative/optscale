@@ -100,15 +100,6 @@ const CleanExpensesTable = ({
         defaultSort: "desc",
         enableHiding: false,
       },
-      tags({
-        accessorKey: "tagsString",
-        getTags: (rowOriginal) => rowOriginal.tags ?? {},
-        columnSelector: {
-          accessor: "tags",
-          messageId: "tags",
-          dataTestId: "btn_toggle_column_tags",
-        },
-      }),
       usage({
         headerDataTestId: "lbl_usage",
         headerMessageId: "usage",
@@ -116,6 +107,15 @@ const CleanExpensesTable = ({
           accessor: "usage",
           messageId: "usage",
           dataTestId: "btn_toggle_column_usage",
+        },
+      }),
+      tags({
+        accessorKey: "tagsString",
+        getTags: (rowOriginal) => rowOriginal.tags ?? {},
+        columnSelector: {
+          accessor: "tags",
+          messageId: "tags",
+          dataTestId: "btn_toggle_column_tags",
         },
       }),
       resourcePoolOwner({
