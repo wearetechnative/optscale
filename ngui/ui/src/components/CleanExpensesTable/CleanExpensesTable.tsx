@@ -11,7 +11,6 @@ import CloudLabel from "components/CloudLabel";
 import ExpenseCell from "components/ExpenseCell";
 import ExpensesTableHeader from "components/ExpensesTableHeader";
 import ResourceCell from "components/ResourceCell";
-import ResourcePaidNetworkTrafficList from "components/ResourcePaidNetworkTrafficList";
 import ResourceTypeLabel from "components/ResourceTypeLabel";
 import Table from "components/Table";
 import TextWithDataTestId from "components/TextWithDataTestId";
@@ -20,9 +19,8 @@ import { useOrganizationInfo } from "hooks/useOrganizationInfo";
 import { intl } from "translations/react-intl-config";
 import { getCreateAssignmentRuleUrl } from "urls";
 import { isEmptyArray } from "utils/arrays";
-import { resourcePoolOwner, tags } from "utils/columns";
+import { resourcePoolOwner, tags, usage } from "utils/columns";
 import { CLEAN_EXPENSES_TABLE_QUERY_PARAM_PREFIX, DOWNLOAD_FILE_FORMATS } from "utils/constants";
-import { MetadataNodes } from "utils/metadata";
 import { CELL_EMPTY_VALUE, RESOURCE_ID_COLUMN_CELL_STYLE } from "utils/tables";
 
 const LocationNodes = ({ region, service_name: serviceName, k8s_node: k8sNode, k8sNamespace }) => {
@@ -102,44 +100,23 @@ const CleanExpensesTable = ({
         defaultSort: "desc",
         enableHiding: false,
       },
-      {
-        header: (
-          <TextWithDataTestId dataTestId="lbl_paid_network_traffic">
-            <FormattedMessage id="paidNetworkTraffic" />
-          </TextWithDataTestId>
-        ),
-        columnSelector: {
-          accessor: "paidNetworkTraffic",
-          messageId: "paidNetworkTraffic",
-          dataTestId: "btn_toggle_paid_network_traffic",
-        },
-        accessorKey: "traffic_expenses",
-        enableSorting: false,
-        style: {
-          minWidth: 320,
-        },
-        cell: ({
-          row: {
-            original: { traffic_expenses: trafficExpenses = [] },
-          },
-        }) =>
-          isEmptyArray(trafficExpenses) ? (
-            CELL_EMPTY_VALUE
-          ) : (
-            <ResourcePaidNetworkTrafficList trafficExpenses={trafficExpenses} />
-          ),
-      },
       tags({
-        headerDataTestId: "lbl_metadata",
-        headerMessageId: "metadata",
-        accessorKey: "metadataString",
-        getTags: (rowOriginal) => rowOriginal.metadataTags ?? {},
+        accessorKey: "tagsString",
+        getTags: (rowOriginal) => rowOriginal.tags ?? {},
         columnSelector: {
-          accessor: "metadata",
-          messageId: "metadata",
-          dataTestId: "btn_toggle_column_metadata",
+          accessor: "tags",
+          messageId: "tags",
+          dataTestId: "btn_toggle_column_tags",
         },
-        sorted: false,
+      }),
+      usage({
+        headerDataTestId: "lbl_usage",
+        headerMessageId: "usage",
+        columnSelector: {
+          accessor: "usage",
+          messageId: "usage",
+          dataTestId: "btn_toggle_column_usage",
+        },
       }),
       resourcePoolOwner({
         accessorKey: "pool/owner",
@@ -253,15 +230,6 @@ const CleanExpensesTable = ({
           );
         },
       },
-      tags({
-        accessorKey: "tagsString",
-        getTags: (rowOriginal) => rowOriginal.tags ?? {},
-        columnSelector: {
-          accessor: "tags",
-          messageId: "tags",
-          dataTestId: "btn_toggle_column_tags",
-        },
-      }),
     ],
     [endDateTimestamp, startDateTimestamp]
   );
@@ -279,9 +247,11 @@ const CleanExpensesTable = ({
           .map(([key, val]) => `${key}: ${val}`) // making array of key: value strings
           .join(" "); // joining with space
 
-        updatedExpense.metadataTags = MetadataNodes(e).getTags();
-        updatedExpense.metadataString = MetadataNodes(e).toString();
         updatedExpense.locationString = `${e.cloud_account_name} ${e.cloud_account_type} ${LocationNodes(e).toString()}`;
+
+        const usageStart = Math.max(e.first_seen, startDateTimestamp);
+        const usageEnd = Math.min(e.last_seen, endDateTimestamp);
+        updatedExpense.usage = Math.max(usageEnd - usageStart, 0) / 3600;
 
         updatedExpense.resourceType = e.cluster_type_id
           ? `${intl.formatMessage({ id: "cluster" })}: ${e.resource_type}`
@@ -289,7 +259,7 @@ const CleanExpensesTable = ({
 
         return updatedExpense;
       }),
-    [expenses]
+    [endDateTimestamp, expenses, startDateTimestamp]
   );
 
   const getActionBarItems = () => {
